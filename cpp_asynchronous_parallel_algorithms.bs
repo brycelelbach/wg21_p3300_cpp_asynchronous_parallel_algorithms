@@ -1,8 +1,8 @@
 <pre class='metadata'>
 Title: C++ Asynchronous Parallel Algorithms
-Shortname: P3300
-Revision: 0
-Status: P
+Shortname: D3300
+Revision: 1
+Status: D
 Group: WG21
 Audience: WG21
 Editor: Bryce Adelstein Lelbach (he/him/his), NVIDIA, brycelelbach@gmail.com
