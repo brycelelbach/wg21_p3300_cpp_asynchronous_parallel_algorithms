@@ -2515,7 +2515,115 @@ This asynchronous value will often differ from the return value of the
 For example, <code class="highlight"><c- n>transform</c-></code> returns a single iterator to the end of the
   transformed range, but <code class="highlight"><c- n>async</c-><c- o>::</c-><c- n>transform</c-></code> should send the transformed range.
 This is implementable because parallel algorithms require forward iterators.</p>
-   <p>TODO: TABLE</p>
+   <table>
+    <tbody>
+     <tr>
+      <th> Algorithm 
+      <th> Non-Parallel Returns... 
+      <th> Asynchronous Sends... 
+     <tr>
+      <td>
+<pre class="highlight"><c- n>transform</c-><c- p>(</c-><c- n>Range0</c-> <c- n>rng0</c-><c- p>,</c->
+          <c- p>[</c-><c- n>Range1</c-> <c- n>rng1</c-><c- p>,]</c->
+          <c- n>Iterator</c-> <c- n>out</c-><c- p>,</c->
+          <c- n>F</c-> <c- n>f</c-><c- p>)</c-><c- s>"</c->
+</pre>
+      <td> Iterators to the last transformed element of <code class="highlight"><c- n>rng0</c-></code> and <code class="highlight"><c- n>rng1</c-></code> and an iterator
+  to the element past the last transformed element of <code class="highlight"><c- n>out</c-></code>. 
+      <td> The range of transformed elements of <code class="highlight"><c- n>out</c-></code>, e.g. <code class="highlight"><c- n>subrange</c-><c- p>(</c-><c- n>out</c-><c- p>,</c-> <c- n>advance</c-><c- p>(</c-><c- n>out</c-><c- p>,</c-> <c- n>N</c-><c- p>))</c-></code>,
+  where <code class="highlight"><c- n>N</c-></code> is the number of elements transformed. 
+     <tr>
+      <td>
+<pre class="highlight"><c- n>for_each</c-><c- p>(</c-><c- n>Range</c-> <c- n>rng</c-><c- p>,</c->
+         <c- n>F</c-> <c- n>f</c-><c- p>)</c->
+</pre>
+      <td> An iterator to the element past the last transformed element of <code class="highlight"><c- n>rng</c-></code> and the
+  object <code class="highlight"><c- n>f</c-></code>. 
+      <td> <code class="highlight"><c- n>rng</c-></code>. 
+     <tr>
+      <td>
+<pre class="highlight"><c- n>reduce</c-><c- p>(</c-><c- n>Range</c-> <c- n>rng</c-><c- p>,</c->
+        <c- n>T</c-> <c- n>init</c-><c- p>,</c->
+        <c- n>F</c-> <c- n>f</c-><c- p>)</c->
+</pre>
+      <td> The sum as a T. 
+      <td> The sum as a T. 
+     <tr>
+      <td>
+<pre class="highlight"><c- n>fold_</c-><c- o>*</c-><c- p>(</c-><c- n>Range</c-> <c- n>rng</c-><c- p>,</c->
+       <c- p>[</c-><c- n>T</c-> <c- n>init</c-><c- p>,]</c->
+       <c- n>F</c-> <c- n>f</c-><c- p>)</c->
+</pre>
+      <td> The sum as a T. 
+      <td> The sum as a T. 
+     <tr>
+      <td>
+<pre class="highlight"><c- n>find_if</c-><c- p>(</c-><c- n>Range</c-> <c- n>rng</c-><c- p>,</c->
+        <c- n>Pred</c-> <c- n>p</c-><c- p>)</c->
+</pre>
+      <td> An iterator to the found element. 
+      <td> An iterator to the found element. 
+     <tr>
+      <td>
+<pre class="highlight"><c- p>(</c-><c- n>min</c-><c- o>|</c-><c- n>max</c-><c- p>)</c-><c- n>_element</c-><c- p>(</c-><c- n>Range</c-> <c- n>rng</c-><c- p>,</c->
+                  <c- n>Comp</c-> <c- n>c</c-><c- p>)</c->
+</pre>
+      <td> An iterator to the found element. 
+      <td> An iterator to the found element. 
+     <tr>
+      <td>
+<pre class="highlight"><c- n>copy</c-><c- p>(</c-><c- n>Range</c-> <c- n>from</c-><c- p>,</c->
+     <c- n>Iterator</c-> <c- n>to</c-><c- p>)</c->
+</pre>
+      <td> An iterator to the last copied element of <code class="highlight"><c- n>from</c-></code> and an iterator to the element
+  past the last copied element of <code class="highlight"><c- n>to</c-></code>. 
+      <td> The range of copied elements of <code class="highlight"><c- n>to</c-></code>, e.g. <code class="highlight"><c- n>subrange</c-><c- p>(</c-><c- n>to</c-><c- p>,</c-> <c- n>advance</c-><c- p>(</c-><c- n>to</c-><c- p>,</c-> <c- n>N</c-><c- p>))</c-></code>, where <code class="highlight"><c- n>N</c-></code> is the number of elements copied. 
+     <tr>
+      <td>
+<pre class="highlight"><c- n>copy_if</c-><c- p>(</c-><c- n>Range</c-> <c- n>from</c-><c- p>,</c->
+        <c- n>Iterator</c-> <c- n>to</c-><c- p>)</c->
+</pre>
+      <td> An iterator to the last copied element of <code class="highlight"><c- n>from</c-></code> and an iterator to the element
+  past the last copied element of <code class="highlight"><c- n>to</c-></code>. 
+      <td> The range of copied elements of <code class="highlight"><c- n>to</c-></code>, e.g. <code class="highlight"><c- n>subrange</c-><c- p>(</c-><c- n>to</c-><c- p>,</c-> <c- n>advance</c-><c- p>(</c-><c- n>to</c-><c- p>,</c-> <c- n>M</c-><c- p>))</c-></code>,
+  where <code class="highlight"><c- n>M</c-></code> is the number of elements copied. 
+     <tr>
+      <td>
+<pre class="highlight"><c- o>*</c-><c- n>_scan</c-><c- p>(</c-><c- n>Range</c-> <c- n>rng</c-><c- p>,</c->
+       <c- n>Iterator</c-> <c- n>out</c-><c- p>,</c->
+       <c- n>T</c-> <c- n>init</c-><c- p>,</c->
+       <c- n>F</c-> <c- n>f</c-><c- p>)</c->
+</pre>
+      <td> An iterator to the element past the last scanned element of <code class="highlight"><c- n>out</c-></code> (this is what
+  the non-parallel overload returns, as there’s no parallel overload yet) 
+      <td> The range of scanned elements of <code class="highlight"><c- n>out</c-></code>, e.g. <code class="highlight"><c- n>subrange</c-><c- p>(</c-><c- n>out</c-><c- p>,</c-> <c- n>advance</c-><c- p>(</c-><c- n>out</c-><c- p>,</c-> <c- n>N</c-><c- p>))</c-></code>,
+  where <code class="highlight"><c- n>N</c-></code> is the number of elements scanned. 
+     <tr>
+      <td>
+<pre class="highlight"><c- n>sort</c-><c- p>(</c-><c- n>Range</c-> <c- n>rng</c-><c- p>,</c->
+     <c- n>Comp</c-> <c- n>c</c-><c- p>)</c->
+</pre>
+      <td> An iterator to the last sorted element. 
+      <td> <code class="highlight"><c- n>rng</c-></code>. 
+     <tr>
+      <td>
+<pre class="highlight"><c- n>unique</c-><c- p>(</c-><c- n>Range</c-> <c- n>rng</c-><c- p>,</c->
+       <c- n>Comp</c-> <c- n>c</c-><c- p>)</c->
+</pre>
+      <td> The range of unique elements of <code class="highlight"><c- n>rng</c-></code>, e.g. <code class="highlight"><c- n>subrange</c-><c- p>(</c-><c- n>begin</c-><c- p>(</c-><c- n>rng</c-><c- p>),</c-> <c- n>advance</c-><c- p>(</c-><c- n>begin</c-><c- p>(</c-><c- n>rng</c-><c- p>),</c-> <c- n>N</c-><c- p>))</c-></code>, where <code class="highlight"><c- n>N</c-></code> is the number of
+  unique elements. 
+      <td> The range of unique elements of <code class="highlight"><c- n>rng</c-></code>, e.g. <code class="highlight"><c- n>subrange</c-><c- p>(</c-><c- n>begin</c-><c- p>(</c-><c- n>rng</c-><c- p>),</c-> <c- n>advance</c-><c- p>(</c-><c- n>begin</c-><c- p>(</c-><c- n>rng</c-><c- p>),</c-> <c- n>N</c-><c- p>))</c-></code>, where <code class="highlight"><c- n>N</c-></code> is the number of
+  unique elements. 
+     <tr>
+      <td>
+<pre class="highlight"><c- n>partition</c-><c- p>(</c-><c- n>Range</c-> <c- n>rng</c-><c- p>,</c->
+          <c- n>Comp</c-> <c- n>c</c-><c- p>)</c->
+</pre>
+      <td> The range of the group of <code class="highlight"><c- n>rng</c-></code> for which <code class="highlight"><c- n>c</c-></code> is false (the second group), e.g. <code class="highlight"><c- n>subrange</c-><c- p>(</c-><c- n>advance</c-><c- p>(</c-><c- n>begin</c-><c- p>(</c-><c- n>rng</c-><c- p>),</c-> <c- n>M</c-><c- p>),</c-> <c- n>end</c-><c- p>(</c-><c- n>rng</c-><c- p>))</c-></code>, where <code class="highlight"><c- n>M</c-></code> is the number of
+  elements for which <code class="highlight"><c- n>c</c-></code> is true. 
+      <td> The range of the group of <code class="highlight"><c- n>rng</c-></code> for which <code class="highlight"><c- n>c</c-></code> is false (the second group), e.g. <code class="highlight"><c- n>subrange</c-><c- p>(</c-><c- n>advance</c-><c- p>(</c-><c- n>begin</c-><c- p>(</c-><c- n>rng</c-><c- p>),</c-> <c- n>M</c-><c- p>),</c-> <c- n>end</c-><c- p>(</c-><c- n>rng</c-><c- p>))</c-></code>, where <code class="highlight"><c- n>M</c-></code> is the number of
+  elements for which <code class="highlight"><c- n>c</c-></code> is true. 
+   </table>
    <p>We eventually reached the conclusion that this whole approach was too complex,
   and that it would be better to use <code class="highlight"><c- n>let_value</c-></code> and named variables to handle
   asynchronous parameters.
