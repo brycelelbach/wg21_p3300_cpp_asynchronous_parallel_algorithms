@@ -20,7 +20,7 @@ Default Biblio Display: direct
 # Introduction # {#introduction}
 
 This paper outlines a unified design for asynchronous parallel algorithms and
-  scheduler-aware synchronous parallel algorithms.
+  scheduler-aware synchronous parallel algorithms for Standard C++.
 
 In C++17, we introduced parallel versions of the standard algorithms, which
   take an execution policy that describes what form of parallelism is allowed, if
@@ -32,7 +32,7 @@ These execution policy parallel algorithms are powerful, but have two major
 - There is no way to specify where parallel work is executed.
 - There is no way to pass tuning knobs and other parameters for execution.
 
-In C++26, we plan to introduce senders and schedulers, C++'s framework for
+In C++26, we plan to introduce [[P2300R7|senders and schedulers]], C++'s framework for
   asynchrony and controlling execution.
 With senders and schedulers, we can address both of the shortcomings of the
   execution policy parallel algorithms.
