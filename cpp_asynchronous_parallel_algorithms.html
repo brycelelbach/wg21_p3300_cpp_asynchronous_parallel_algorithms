@@ -2165,7 +2165,7 @@ dfn > a.self-link::before      { content: "#"; }
   <main>
    <h2 class="heading settled" data-level="1" id="introduction"><span class="secno">1. </span><span class="content">Introduction</span><a class="self-link" href="#introduction"></a></h2>
    <p>This paper outlines a unified design for asynchronous parallel algorithms and
-  scheduler-aware synchronous parallel algorithms.</p>
+  scheduler-aware synchronous parallel algorithms for Standard C++.</p>
    <p>In C++17, we introduced parallel versions of the standard algorithms, which
   take an execution policy that describes what form of parallelism is allowed, if
   any.
@@ -2180,7 +2180,7 @@ calling execution agent until the work completes.</p>
     <li data-md>
      <p>There is no way to pass tuning knobs and other parameters for execution.</p>
    </ul>
-   <p>In C++26, we plan to introduce senders and schedulers, C++'s framework for
+   <p>In C++26, we plan to introduce <a data-link-type="biblio" href="https://wg21.link/p2300r7" title="`std::execution`">senders and schedulers</a>, C++'s framework for
   asynchrony and controlling execution.
 With senders and schedulers, we can address both of the shortcomings of the
   execution policy parallel algorithms.
@@ -2771,6 +2771,8 @@ But it may be a bit of a footgun for asynchronous parallel algorithms, just as
   <h2 class="no-num no-ref heading settled" id="references"><span class="content">References</span><a class="self-link" href="#references"></a></h2>
   <h3 class="no-num no-ref heading settled" id="informative"><span class="content">Informative References</span><a class="self-link" href="#informative"></a></h3>
   <dl>
+   <dt id="biblio-p2300r7">[P2300R7]
+   <dd>Eric Niebler, Michał Dominiak, Georgy Evtushenko, Lewis Baker, Lucian Radu Teodorescu, Lee Howes, Kirk Shoop, Michael Garland, Bryce Adelstein Lelbach. <a href="https://wg21.link/p2300r7"><cite>`std::execution`</cite></a>. 21 April 2023. URL: <a href="https://wg21.link/p2300r7">https://wg21.link/p2300r7</a>
    <dt id="biblio-p2500r2">[P2500R2]
    <dd>Ruslan Arutyunyan, Alexey Kukanov. <a href="https://wg21.link/p2500r2"><cite>C++ parallel algorithms and P2300</cite></a>. 15 October 2023. URL: <a href="https://wg21.link/p2500r2">https://wg21.link/p2500r2</a>
   </dl>
