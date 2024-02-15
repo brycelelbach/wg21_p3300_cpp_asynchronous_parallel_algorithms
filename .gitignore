@@ -1,0 +1,3 @@
+build/
+*.csv
+*poll_comments*.md
