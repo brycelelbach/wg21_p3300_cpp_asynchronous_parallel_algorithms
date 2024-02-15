@@ -468,7 +468,171 @@ For example, `transform` returns a single iterator to the end of the
   transformed range, but `async::transform` should send the transformed range.
 This is implementable because parallel algorithms require forward iterators.
 
-TODO: TABLE
+<table>
+<tr>
+<th>
+Algorithm
+<th>
+Non-Parallel Returns...
+<th>
+Asynchronous Sends...
+
+<tr>
+<td>
+```
+transform(Range0 rng0,
+          [Range1 rng1,]
+          Iterator out,
+          F f)"
+```
+<td>
+Iterators to the last transformed element of `rng0` and `rng1` and an iterator
+  to the element past the last transformed element of `out`.
+<td>
+The range of transformed elements of `out`, e.g. `subrange(out, advance(out, N))`,
+  where `N` is the number of elements transformed.
+
+<tr>
+<td>
+```
+for_each(Range rng,
+         F f)
+```
+<td>
+An iterator to the element past the last transformed element of `rng` and the
+  object `f`.
+<td>
+`rng`.
+
+<tr>
+<td>
+```
+reduce(Range rng,
+        T init,
+        F f)
+```
+<td>
+The sum as a T.
+<td>
+The sum as a T.
+
+<tr>
+<td>
+```
+fold_*(Range rng,
+       [T init,]
+       F f)
+```
+<td>
+The sum as a T.
+<td>
+The sum as a T.
+
+<tr>
+<td>
+```
+find_if(Range rng,
+        Pred p)
+```
+<td>
+An iterator to the found element.
+<td>
+An iterator to the found element.
+
+<tr>
+<td>
+```
+(min|max)_element(Range rng,
+                  Comp c)
+```
+<td>
+An iterator to the found element.
+<td>
+An iterator to the found element.
+
+<tr>
+<td>
+```
+copy(Range from,
+     Iterator to)
+```
+<td>
+An iterator to the last copied element of `from` and an iterator to the element
+  past the last copied element of `to`.
+<td>
+The range of copied elements of `to`, e.g. `subrange(to, advance(to, N))`, where
+  `N` is the number of elements copied.
+
+<tr>
+<td>
+```
+copy_if(Range from,
+        Iterator to)
+```
+<td>
+An iterator to the last copied element of `from` and an iterator to the element
+  past the last copied element of `to`.
+<td>
+The range of copied elements of `to`, e.g. `subrange(to, advance(to, M))`,
+  where `M` is the number of elements copied.
+
+<tr>
+<td>
+```
+*_scan(Range rng,
+       Iterator out,
+       T init,
+       F f)
+```
+<td>
+An iterator to the element past the last scanned element of `out` (this is what
+  the non-parallel overload returns, as there's no parallel overload yet)
+<td>
+The range of scanned elements of `out`, e.g. `subrange(out, advance(out, N))`,
+  where `N` is the number of elements scanned.
+
+<tr>
+<td>
+```
+sort(Range rng,
+     Comp c)
+```
+<td>
+An iterator to the last sorted element.
+<td>
+`rng`.
+
+<tr>
+<td>
+```
+unique(Range rng,
+       Comp c)
+```
+<td>
+The range of unique elements of `rng`, e.g.
+  `subrange(begin(rng), advance(begin(rng), N))`, where `N` is the number of
+  unique elements.
+<td>
+The range of unique elements of `rng`, e.g.
+  `subrange(begin(rng), advance(begin(rng), N))`, where `N` is the number of
+  unique elements.
+
+<tr>
+<td>
+```
+partition(Range rng,
+          Comp c)
+```
+<td>
+The range of the group of `rng` for which `c` is false (the second group), e.g.
+  `subrange(advance(begin(rng), M), end(rng))`, where `M` is the number of
+  elements for which `c` is true.
+<td>
+The range of the group of `rng` for which `c` is false (the second group), e.g.
+  `subrange(advance(begin(rng), M), end(rng))`, where `M` is the number of
+  elements for which `c` is true.
+
+</table>
 
 We eventually reached the conclusion that this whole approach was too complex,
   and that it would be better to use `let_value` and named variables to handle
