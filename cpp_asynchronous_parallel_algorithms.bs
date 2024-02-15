@@ -1,8 +1,8 @@
 <pre class='metadata'>
 Title: C++ Asynchronous Parallel Algorithms
-Shortname: D3300
+Shortname: P3300
 Revision: 0
-Status: D
+Status: P
 Group: WG21
 Audience: WG21
 Editor: Bryce Adelstein Lelbach (he/him/his), NVIDIA, brycelelbach@gmail.com
@@ -483,7 +483,7 @@ Asynchronous Sends...
 transform(Range0 rng0,
           [Range1 rng1,]
           Iterator out,
-          F f)"
+          F f)
 ```
 <td>
 Iterators to the last transformed element of `rng0` and `rng1` and an iterator
