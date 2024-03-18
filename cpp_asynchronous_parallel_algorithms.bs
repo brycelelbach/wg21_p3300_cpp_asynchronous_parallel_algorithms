@@ -208,6 +208,11 @@ auto unique_sort = just() | async::sort(v) | async::unique(v);
 
 ## Normalize ## {#examples-normalize}
 
+To normalize a range of numbers, we divide each element of a range by the
+  maximum element in the range.
+For example, if we have `{4 2 1 2}`, the maximum is `4`, and the normalized
+  range would be `{1, 1/2, 1/4, 1/2}`.
+
 ```
 auto normalize_serial(range auto&& v) {
   auto mx = fold_left(v, ranges::max{});
@@ -239,38 +244,49 @@ auto normalize_coroutine(range auto&& v) {
 }
 ```
 
-## Minimum Difference ## {#examples-minimum-difference}
+## Maximum Gap ## {#examples-maximum-gap}
+
+Find the maximum difference between two successive elements in the sorted form
+  of the range.
+This is a well-known [LeetCode problem](https://leetcode.com/problems/maximum-gap).
+For example, the maximum gap of `{3, 6, 9, 1}` is `3`.
 
 ```
-auto minimum_difference_serial(range auto&& v) {
-  vector<T> tmp(size(v));
-  sort(v);
-  adjacent_difference(v, begin(tmp));
-  return *min_element(tmp | drop(1));
+auto maximum_gap_serial(range auto&& v) {
+  vector<T> tmp(v);
+  sort(tmp);
+  adjacent_difference(tmp, begin(tmp));
+  return *max_element(tmp | drop(1));
 }
 ```
 
 ```
-sender auto minimum_difference_async(range auto&& v) {
-  return just(vector<T>(size(v))))
-       | let_value([&v] (range auto&& tmp) {
-           return async::sort(just(), v)
-                | async::adjacent_difference(v, begin(tmp))
-                | async::min_element(tmp | drop(1));
+sender auto maximum_gap_async(range auto&& v) {
+  return just(vector<T>(v)))
+       | let_value([] (range auto&& tmp) {
+           return async::sort(just(), tmp)
+                | async::adjacent_difference(tmp, begin(tmp))
+                | async::max_element(tmp | drop(1));
          });
 }
 ```
 
 ```
-sender auto minimum_difference_coroutine(range auto&& v) {
-  vector<T> tmp(size(v));
-  auto s0 = async::sort(just(), v);
-  auto s1 = async::adjacent_difference(s0, v, begin(tmp));
-  co_return *co_await async::min_element(s1, tmp | drop(1));
+sender auto maximum_gap_coroutine(range auto&& v) {
+  vector<T> tmp(v);
+  auto s0 = async::sort(just(), tmp);
+  auto s1 = async::adjacent_difference(s0, tmp, begin(tmp));
+  co_return *co_await async::max_element(s1, tmp | drop(1));
 }
 ```
 
 ## Rain Water ## {#examples-rain-water}
+
+Given a range of non-negative numbers representing an elevation map where the
+  width of each bar is 1, compute how much water can be trapped after raining.
+This is a well-known [LeetCode problem](https://leetcode.com/problems/trapping-rain-water).
+For example, if we have `{1, 0, 2, 0, 2}`, then 3 units of water can be trapped.
+
 
 ```
 int rain_water_serial(range auto&& v) {
