@@ -2101,7 +2101,7 @@ dfn > a.self-link::before      { content: "#"; }
   <div class="head">
    <p data-fill-with="logo"></p>
    <h1 class="p-name no-ref" id="title">D3300R1<br>C++ Asynchronous Parallel Algorithms</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Proposal, <time class="dt-updated" datetime="2024-03-17">2024-03-17</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Proposal, <time class="dt-updated" datetime="2024-03-24">2024-03-24</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt class="editor">Author:
@@ -2376,18 +2376,18 @@ For example, if we have <code class="highlight"><c- p>{</c-><c- mi>1</c-><c- p>,
            <c- k>auto</c-> <c- n>sit</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>)</c-> <c- o>|</c-> <c- n>split</c-><c- p>;</c->
 
            <c- k>auto</c-> <c- n>sleft</c->  <c- o>=</c-> <c- n>sit</c->
-                      <c- o>|</c-> <c- n>let_value</c-><c- p>([</c-><c- o>&amp;</c-><c- n>v</c-><c- p>]</c-> <c- p>(</c-><c- k>auto</c-> <c- n>it</c-><c- p>)</c-> <c- p>{</c->
-                          <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c->
-                            <c- n>just</c-><c- p>(),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>next</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>tmp</c-><c- p>),</c->
-                            <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>{});</c->
-                        <c- p>});</c->
+                       <c- o>|</c-> <c- n>let_value</c-><c- p>([</c-><c- o>&amp;</c-><c- n>v</c-><c- p>]</c-> <c- p>(</c-><c- k>auto</c-> <c- n>it</c-><c- p>)</c-> <c- p>{</c->
+                           <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c->
+                             <c- n>just</c-><c- p>(),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>next</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>tmp</c-><c- p>),</c->
+                             <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>{});</c->
+                         <c- p>});</c->
 
            <c- k>auto</c-> <c- n>sright</c-> <c- o>=</c-> <c- n>sit</c->
-                      <c- o>|</c-> <c- n>let_value</c-><c- p>([</c-><c- o>&amp;</c-><c- n>v</c-><c- p>]</c-> <c- p>(</c-><c- k>auto</c-> <c- n>it</c-><c- p>)</c-> <c- p>{</c->
-                          <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c->
-                            <c- n>just</c-><c- p>(),</c-> <c- n>rbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>reverse_iterator</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>rbegin</c-><c- p>(</c-><c- n>tmp</c-><c- p>),</c->
-                            <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>{});</c->
-                        <c- p>});</c->
+                       <c- o>|</c-> <c- n>let_value</c-><c- p>([</c-><c- o>&amp;</c-><c- n>v</c-><c- p>]</c-> <c- p>(</c-><c- k>auto</c-> <c- n>it</c-><c- p>)</c-> <c- p>{</c->
+                           <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c->
+                             <c- n>just</c-><c- p>(),</c-> <c- n>rbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>reverse_iterator</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>rbegin</c-><c- p>(</c-><c- n>tmp</c-><c- p>),</c->
+                             <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>{});</c->
+                         <c- p>});</c->
 
            <c- k>return</c-> <c- n>when_all</c-><c- p>(</c-><c- n>sleft</c-><c- p>,</c-> <c- n>sright</c-><c- p>)</c->
                 <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>transform_reduce</c-><c- p>(</c-><c- n>tmp</c-><c- p>,</c-> <c- n>cbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- mi>0</c-><c- p>,</c-> <c- n>plus</c-><c- o>&lt;></c-><c- p>(),</c-> <c- n>minus</c-><c- o>&lt;></c-><c- p>());</c->
