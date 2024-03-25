@@ -301,7 +301,7 @@ int rain_water_serial(range auto&& v) {
 ```
 sender_of<int> auto rain_water_async(range auto&& v) {
   return just(vector<T>(size(v))))
-       | let_value([&v] (ranges auto&& tmp) {
+       | let_value([&v] (range auto&& tmp) {
            auto sit = async::max_element(just(), v) | split;
 
            auto sleft  = sit
