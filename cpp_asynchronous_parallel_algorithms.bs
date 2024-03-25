@@ -305,18 +305,18 @@ sender_of<int> auto rain_water_async(range auto&& v) {
            auto sit = async::max_element(just(), v) | split;
 
            auto sleft  = sit
-                      | let_value([&v] (auto it) {
-                          return async::inclusive_scan(
-                            just(), begin(v), next(it), begin(tmp),
-                            ranges::max{});
-                        });
+                       | let_value([&v] (auto it) {
+                           return async::inclusive_scan(
+                             just(), begin(v), next(it), begin(tmp),
+                             ranges::max{});
+                         });
 
            auto sright = sit
-                      | let_value([&v] (auto it) {
-                          return async::inclusive_scan(
-                            just(), rbegin(v), reverse_iterator(it), rbegin(tmp),
-                            ranges::max{});
-                        });
+                       | let_value([&v] (auto it) {
+                           return async::inclusive_scan(
+                             just(), rbegin(v), reverse_iterator(it), rbegin(tmp),
+                             ranges::max{});
+                         });
 
            return when_all(sleft, sright)
                 | async::transform_reduce(tmp, cbegin(v), 0, plus<>(), minus<>());
