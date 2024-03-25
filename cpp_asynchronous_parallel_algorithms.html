@@ -2212,9 +2212,9 @@ This sender represents prior work that must complete before the algorithm is
    <p>Senders have queryable attributes.
 A parallel algorithm that takes a sender determines its scheduler and execution
   policy from the sender by querying the appropriate attribute.
-A scheduler may be attached to a sender with <code class="highlight"><c- n>snd</c-> <c- o>|</c-> <c- n>schedule</c-><c- p>(</c-><c- n>sch</c-><c- p>)</c-></code> or <code class="highlight"><c- n>snd</c-> <c- o>|</c-> <c- n>transfer</c-><c- p>(</c-><c- n>sch</c-><c- p>)</c-></code>.
+A scheduler may be attached to a sender with <code class="highlight"><c- n>snd</c-> <c- o>=</c-> <c- n>schedule</c-><c- p>(</c-><c- n>sch</c-><c- p>)</c-></code> or <code class="highlight"><c- n>snd</c-> <c- o>|</c-> <c- n>transfer</c-><c- p>(</c-><c- n>sch</c-><c- p>)</c-></code>.
 An execution policy may be attached to a sender with <code class="highlight"><c- n>snd</c-> <c- o>|</c-> <c- n>attach_execution_policy</c-><c- p>(</c-><c- n>pol</c-><c- p>)</c-></code>.
-Both may be attached at the same time with <code class="highlight"><c- n>snd</c-> <c- o>|</c-> <c- n>schedule</c-><c- p>(</c-><c- n>sch</c-><c- p>,</c-> <c- n>pol</c-><c- p>)</c-></code>, <code class="highlight"><c- n>snd</c-> <c- o>|</c-> <c- n>transfer</c-><c- p>(</c-><c- n>sch</c-><c- p>,</c-> <c- n>pol</c-><c- p>)</c-></code>, or <code class="highlight"><c- n>on</c-><c- p>(</c-><c- n>sch</c-><c- p>,</c-> <c- n>pol</c-><c- p>,</c-> <c- n>snd</c-><c- p>)</c-></code>.</p>
+Both may be attached at the same time with <code class="highlight"><c- n>snd</c-> <c- o>=</c-> <c- n>schedule</c-><c- p>(</c-><c- n>sch</c-><c- p>,</c-> <c- n>pol</c-><c- p>)</c-></code>, <code class="highlight"><c- n>snd</c-> <c- o>|</c-> <c- n>transfer</c-><c- p>(</c-><c- n>sch</c-><c- p>,</c-> <c- n>pol</c-><c- p>)</c-></code>, or <code class="highlight"><c- n>on</c-><c- p>(</c-><c- n>sch</c-><c- p>,</c-> <c- n>pol</c-><c- p>,</c-> <c- n>snd</c-><c- p>)</c-></code>.</p>
    <p>If the execution policy attached cannot be satisfied by the scheduler, a
   compilation error occurs.
 If no execution policy is attached and the scheduler has no default, a
