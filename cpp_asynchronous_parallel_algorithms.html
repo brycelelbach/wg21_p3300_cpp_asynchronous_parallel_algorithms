@@ -2372,7 +2372,7 @@ For example, if we have <code class="highlight"><c- p>{</c-><c- mi>1</c-><c- p>,
 </pre>
 <pre class="highlight"><c- n>sender_of</c-><c- o>&lt;</c-><c- b>int</c-><c- o>></c-> <c- k>auto</c-> <c- n>rain_water_async</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
   <c- k>return</c-> <c- n>just</c-><c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>))))</c->
-       <c- o>|</c-> <c- n>let_value</c-><c- p>([</c-><c- o>&amp;</c-><c- n>v</c-><c- p>]</c-> <c- p>(</c-><c- n>ranges</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>tmp</c-><c- p>)</c-> <c- p>{</c->
+       <c- o>|</c-> <c- n>let_value</c-><c- p>([</c-><c- o>&amp;</c-><c- n>v</c-><c- p>]</c-> <c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>tmp</c-><c- p>)</c-> <c- p>{</c->
            <c- k>auto</c-> <c- n>sit</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>)</c-> <c- o>|</c-> <c- n>split</c-><c- p>;</c->
 
            <c- k>auto</c-> <c- n>sleft</c->  <c- o>=</c-> <c- n>sit</c->
