@@ -68,12 +68,6 @@ The single sender parameter of a synchronous scheduled parallel algorithm or an 
 
 We will introduce two new types of parallel algorithms: synchronous scheduled
   and asynchronous.
-Synchronous scheduler parallel algorithms take a `scheduler`, from which they
-  will obtain a sender by calling `schedule`.
-They will launch their work using that sender, and then make exactly one call
-  to `sync_wait` to block pending the completion of the work they create, to
-  ensure that they block in a manner that can be customized by scheduler and
-  sender authors.
 
 ```
 algorithm(a, b, c, d); // Serial
@@ -82,32 +76,16 @@ T t = algorithm(sch, a, b, c, d); // Synchronous scheduled parallel (New)
 sender_of<T> auto s = async::algorithm(snd, a, b, c, d); // Asynchronous (New)
 ```
 
-Senders and receivers have queryable properties retrievable via `get_env`.
-Synchronous scheduled and asynchronous parallel algorithm receive properties
-  of execution through this mechanism, including execution policy (which is
-  required), allocators, stop tokens, tuning knobs, etc.
-This is a subtle but key difference from the original [[P2500R2]] proposal;
-  properties such as the execution policy are attached to the senders produced
-  from a scheduler, not the scheduler itself.
+## Synchronous Scheduled Parallel Algorithms ## {#design-synchronous-scheduled-parallel-algorithms}
 
-An execution policy may be attached to a scheduler with
-  `execute_with(sch, pol)` (from [[P2500R2]]), a facility which takes a
-  scheduler and returns a new scheduler which will produce senders that have
-  the specified execution policy attached.
-A scheduler may be attached to a sender with `snd | transfer(sch)` or
-  `on(sch, snd)`.
-An execution policy may be attached to a sender with
-  `snd | attach_execution_policy(pol)`, a new sender adaptor.
-Both may be attached at the same time with `snd = schedule(sch, pol)`, `snd |
-  transfer(sch, pol)`, or `on(sch, pol, snd)`, all of which are new forms of
-  existing sender adaptors.
+Synchronous scheduled parallel algorithms take a `scheduler`, from which they
+  will obtain a sender by calling `schedule`.
+They will launch their work using that sender, and then make exactly one call
+  to `sync_wait` to block pending the completion of the work they create, to
+  ensure that they block in a manner that can be customized by scheduler and
+  sender authors.
 
-If the execution policy attached cannot be satisfied by the scheduler, a
-  compilation error occurs.
-If no execution policy is attached and the scheduler has no default, a
-  compilation error occurs.
-If the sender passed to a synchronous scheduled parallel algorithm has no
-  scheduler attached to it, a compilation error occurs.
+## Asynchronous Parallel Algorithms ## {#design-asynchronous-parallel-algorithms}
 
 Asynchronous parallel algorithms are sender adaptors - they take a sender and
   return a sender.
@@ -176,6 +154,35 @@ For completeness, execution policy overloads of `std::ranges` algorithms
   should be added as well.
 A separate paper on the related but orthogonal topic of parallelizing
   `std::ranges` algorithms and range adaptors is forthcoming.
+
+## Properties of Execution ## {#design-properties-of-execution}
+
+Senders and receivers have queryable properties retrievable via `get_env`.
+Synchronous scheduled and asynchronous parallel algorithm receive properties
+  of execution through this mechanism, including execution policy (which is
+  required), allocators, stop tokens, tuning knobs, etc.
+This is a subtle but key difference from the original [[P2500R2]] proposal;
+  properties such as the execution policy are attached to the senders produced
+  from a scheduler, not the scheduler itself.
+
+An execution policy may be attached to a scheduler with
+  `execute_with(sch, pol)` (from [[P2500R2]]), a facility which takes a
+  scheduler and returns a new scheduler which will produce senders that have
+  the specified execution policy attached.
+A scheduler may be attached to a sender with `snd | transfer(sch)` or
+  `on(sch, snd)`.
+An execution policy may be attached to a sender with
+  `snd | attach_execution_policy(pol)`, a new sender adaptor.
+Both may be attached at the same time with `snd = schedule(sch, pol)`, `snd |
+  transfer(sch, pol)`, or `on(sch, pol, snd)`, all of which are new forms of
+  existing sender adaptors.
+
+If the execution policy attached cannot be satisfied by the scheduler, a
+  compilation error occurs.
+If no execution policy is attached and the scheduler has no default, a
+  compilation error occurs.
+If the sender passed to a synchronous scheduled parallel algorithm has no
+  scheduler attached to it, a compilation error occurs.
 
 ## Compositional Utilities ## {#design-compositional-utilities}
 
