@@ -179,11 +179,11 @@ A separate paper on the related but orthogonal topic of parallelizing
 
 ## Compositional Utilities ## {#design-compositional-utilities}
 
-`select` and `with` are sender adaptors that aid composition of asynchronous
+`select` and `also` are sender adaptors that aid composition of asynchronous
   parallel algorithms.
 `select<N, M, ...>(snd)` chooses which values from a sender should be sent and
   in what order.
-`with(snd, f)` invokes `f` with the values sent by `snd`, and then sends those
+`also(snd, f)` invokes `f` with the values sent by `snd`, and then sends those
   same values, along with the result of the invocation.
 
 ```
@@ -193,7 +193,7 @@ select(sender_of<Args> auto args, F f);
 // (args), (S[0], S[1], …), f -> f(args[S[0]], args[S[1]], args[…], …)
 
 sender_of<A, B, …, invoke_result_t<F, A, B, …>> auto
-with(sender_of<A, B, …> auto, F f);
+also(sender_of<A, B, …> auto, F f);
 // (a, b, …), f -> (a, b, …, F(a, b, …))
 ```
 
@@ -438,7 +438,7 @@ auto unique_sort = just(v) | async::sort | async::unique;
 ```
 
 However, we found that the model broke down when writing more complex code.
-We often had to use the `with` and `select` utilities and additionally insert
+We often had to use the `also` and `select` utilities and additionally insert
   `then` adaptors that would adjust parameters in between algorithm
   invocations - increment an iterator by one, dereference an iterator, turn a
   scalar into a range view, get an iterator from a range, etc.
@@ -456,7 +456,7 @@ sender_of<la_vector> upper_triangular_cholesky_factorization_async(
   la_matrix A, la_vector b, la_vector x)
 {
   return just(transposed(A), upper_triangle, explicit_diagonal, b, x)
-       | with(async::triangular_matrix_vector_solve(divides))
+       | also(async::triangular_matrix_vector_solve(divides))
          // Receives (transposed(A), upper_triangle, explicit_diagonal, b, x)
          // Sends (transposed(A), upper_triangle, explicit_diagonal, b, x)
        | select<0, 1, 2, 4>(then([] (auto A, auto tri, auto dia, auto x) {
