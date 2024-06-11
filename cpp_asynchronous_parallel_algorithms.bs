@@ -965,3 +965,16 @@ table, th, tr, td {
 }
 </style>
 
+# Changelog # {#changelog}
+
+## R1 ## {#changelog-r1}
+
+- Add HPX-dataflow-inspired asynchronous parameters.
+- Change predecessor sender value passthrough to append instead of prepending.
+- Remove passthrough of values from the predecessor from the proposed design,
+    but leave it in the alternatives section.
+- Change synchronous scheduled algorithms to take schedulers, not senders, as
+    [[P2500R2]] proposes.
+- Rename the compositional utility `with` to `also`.
+- Add fixes and more explanation of examples.
+
