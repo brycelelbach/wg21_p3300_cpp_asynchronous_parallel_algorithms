@@ -2158,6 +2158,11 @@ dfn > a.self-link::before      { content: "#"; }
       <li><a href="#issues-lifetimes"><span class="secno">6.2</span> <span class="content">Lifetimes</span></a>
      </ol>
     <li>
+     <a href="#changelog"><span class="secno">7</span> <span class="content">Changelog</span></a>
+     <ol class="toc">
+      <li><a href="#changelog-r1"><span class="secno">7.1</span> <span class="content">R1</span></a>
+     </ol>
+    <li>
      <a href="#index"><span class="secno"></span> <span class="content">Index</span></a>
      <ol class="toc">
       <li><a href="#index-defined-here"><span class="secno"></span> <span class="content">Terms defined by this specification</span></a>
@@ -2894,6 +2899,23 @@ However, we do not see a path for an elegant point-free-style design, so we are
 That’s fine because they complete immediately.
 But it may be a bit of a footgun for asynchronous parallel algorithms, just as
   it is for range views.</p>
+   <h2 class="heading settled" data-level="7" id="changelog"><span class="secno">7. </span><span class="content">Changelog</span><a class="self-link" href="#changelog"></a></h2>
+   <h3 class="heading settled" data-level="7.1" id="changelog-r1"><span class="secno">7.1. </span><span class="content">R1</span><a class="self-link" href="#changelog-r1"></a></h3>
+   <ul>
+    <li data-md>
+     <p>Add HPX-dataflow-inspired asynchronous parameters.</p>
+    <li data-md>
+     <p>Change predecessor sender value passthrough to append instead of prepending.</p>
+    <li data-md>
+     <p>Remove passthrough of values from the predecessor from the proposed design,
+but leave it in the alternatives section.</p>
+    <li data-md>
+     <p>Change synchronous scheduled algorithms to take schedulers, not senders, as <a data-link-type="biblio" href="https://wg21.link/p2500r2" title="C++ parallel algorithms and P2300">[P2500R2]</a> proposes.</p>
+    <li data-md>
+     <p>Rename the compositional utility <code class="highlight"><c- n>with</c-></code> to <code class="highlight"><c- n>also</c-></code>.</p>
+    <li data-md>
+     <p>Add fixes and more explanation of examples.</p>
+   </ul>
   </main>
 <script>
 (function() {
