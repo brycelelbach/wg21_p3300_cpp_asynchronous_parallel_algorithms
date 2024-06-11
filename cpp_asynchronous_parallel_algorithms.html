@@ -1561,7 +1561,7 @@ Possible extra rowspan handling
     blockquote c-[vi] { color: inherit; } /* Name.Variable.Instance */
     blockquote c-[il] { color: inherit; } /* Literal.Number.Integer.Long */
   </style>
-  <meta content="Bikeshed version d765c696b, updated Fri Mar 8 15:58:52 2024 -0800" name="generator">
+  <meta content="Bikeshed version 4afc1fdf9, updated Tue May 28 15:43:17 2024 -0700" name="generator">
   <link href="https://wg21.link/P3300" rel="canonical">
   <link href="https://isocpp.org/favicon.ico" rel="icon">
   <meta content="dark light" name="color-scheme">
@@ -2101,7 +2101,7 @@ dfn > a.self-link::before      { content: "#"; }
   <div class="head">
    <p data-fill-with="logo"></p>
    <h1 class="p-name no-ref" id="title">D3300R1<br>C++ Asynchronous Parallel Algorithms</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Proposal, <time class="dt-updated" datetime="2024-03-24">2024-03-24</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Proposal, <time class="dt-updated" datetime="2024-06-11">2024-06-11</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt class="editor">Author:
@@ -2307,20 +2307,20 @@ Likewise, <code class="highlight"><c- n>send_error</c-><c- p>(</c-><c- n>e</c-><
 For example, if we have <code class="highlight"><c- p>{</c-><c- mi>4</c-> <c- mi>2</c-> <c- mi>1</c-> <c- mi>2</c-><c- p>}</c-></code>, the maximum is <code class="highlight"><c- mi>4</c-></code>, and the normalized
   range would be <code class="highlight"><c- p>{</c-><c- mi>1</c-><c- p>,</c-> <c- mi>1</c-><c- o>/</c-><c- mi>2</c-><c- p>,</c-> <c- mi>1</c-><c- o>/</c-><c- mi>4</c-><c- p>,</c-> <c- mi>1</c-><c- o>/</c-><c- mi>2</c-><c- p>}</c-></code>.</p>
 <pre class="highlight"><c- k>auto</c-> <c- n>normalize_serial</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-  <c- k>auto</c-> <c- n>mx</c-> <c- o>=</c-> <c- n>fold_left</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>{});</c->
-  <c- k>return</c-> <c- n>transform</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>(</c-><c- n>mx</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>);</c->
+  <c- k>auto</c-> <c- n>mx</c-> <c- o>=</c-> <c- n>fold_left</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
+  <c- k>return</c-> <c- n>transform</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>(</c-><c- n>mx</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>{});</c->
 <c- p>}</c->
 </pre>
 <pre class="highlight"><c- k>auto</c-> <c- n>normalize_parallel</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-  <c- k>auto</c-> <c- n>mx</c-> <c- o>=</c-> <c- n>fold_left</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>v</c-><c- p>,</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>{});</c->
-  <c- k>return</c-> <c- n>transform</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>v</c-><c- p>,</c-> <c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>(</c-><c- n>mx</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>);</c->
+  <c- k>auto</c-> <c- n>mx</c-> <c- o>=</c-> <c- n>fold_left</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>v</c-><c- p>,</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
+  <c- k>return</c-> <c- n>transform</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>v</c-><c- p>,</c-> <c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>(</c-><c- n>mx</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>{});</c->
 <c- p>}</c->
 </pre>
 <pre class="highlight"><c- k>auto</c-> <c- n>normalize_async</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
   <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>fold_left</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>{})</c->
        <c- o>|</c-> <c- n>let_value</c-><c- p>([]</c-> <c- p>(</c-><c- k>auto</c-> <c- n>mx</c-><c- p>,</c-> <c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
            <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>transform</c-><c- p>(</c->
-             <c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>,</c-> <c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>(</c-><c- n>mx</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>);</c->
+             <c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>,</c-> <c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>(</c-><c- n>mx</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>{});</c->
          <c- p>});</c->
 <c- p>}</c->
 </pre>
