@@ -286,7 +286,8 @@ sender auto maximum_gap_async(range auto&& v) {
        | let_value([] (range auto&& tmp) {
            return async::sort(just(), tmp)
                 | async::adjacent_difference(tmp, begin(tmp))
-                | async::max_element(tmp | drop(1));
+                | async::max_element(tmp | drop(1))
+                | then([] (auto it) { return *it; });
          });
 }
 ```
