@@ -106,17 +106,22 @@ They must use `sync_wait` to block pending the completion of both their
 
 Asynchronous parallel algorithms are sender adaptors - they take a sender and
   return a sender.
-The returned sender will send the values sent by the predecessor, followed by
-  the result you would get by calling the serial algorithm (if it returns
-  non-`void`).
-This "pass through" of values from the predecessor is similar to what `bulk`
-  does.
+
+The predecessor sender represents solely an execution dependency - the algorithm
+  does not use any values it sends.
+We discuss our exploration of passing inputs to the algorithm through the
+  predecessor sender in [[#alternatives-single-asynchronous-parameter]].
+
+The returned sender will send the result you would get by calling the serial
+  algorithm if it returns non-`void`, and nothing otherwise.
 
 ```
-sender_of<T> auto s0 = async::algorithm(schedule(sch), a, b, c, d);
+sender_of<T> auto s0 = async::algorithm_q(schedule(sch), a, b, c, d);
+
+sender_of<void> auto s1 = async::algorithm_r(schedule(sch), e, f);
 
 sender_of<int, bool> auto s1 = just(17, true);
-sender_of<int, bool, T> auto s2 = async::algorithm(s1, a, b, c, d);
+sender_of<T> auto s2 = async::algorithm_q(s1, a, b, c, d);
 ```
 
 Asynchronous parallel algorithms are pipeable.
@@ -130,10 +135,10 @@ auto s0 =
 
 auto s1 =
     just(17, true)                     // `sender_of<int, bool>`
-  | async::algorithm_x(a, b, c, d)     // `sender_of<int, bool, T>`, algorithm's result is `T`
+  | async::algorithm_x(a, b, c, d)     // `sender_of<T>`, algorithm's result is `T`
   | then([] (T t, int i, bool b) -> V  // `sender_of<V>`
          { /* … */ })
-  | async::algorithm_y(b, e, f);       // `sender_of<V, U>`, algorithm's result is `V`
+  | async::algorithm_y(b, e, f);       // `sender_of<U>`, algorithm's result is `U`
 ```
 
 The senders returned by asynchronous parallel algorithms are awaitable, so we
@@ -164,10 +169,6 @@ For completeness, execution policy overloads of `std::ranges` algorithms
   should be added as well.
 A separate paper on the related but orthogonal topic of parallelizing
   `std::ranges` algorithms and range adaptors is forthcoming.
-
-There is precedent for this overall design in `bulk`.
-`bulk` is a sender adaptor, does not take an explicit scheduler or execution
-  policy, and passes through the values sent by its predecessor.
 
 ## Compositional Utilities ## {#design-compositional-utilities}
 
@@ -385,7 +386,7 @@ sender_of<la_vector> upper_triangular_cholesky_factorization_async(
 
 # Alternatives # {#alternatives}
 
-## Asynchronous Parameters and Logical Return Types ## {#alternatives-asynchronous-parameters}
+## Single Asynchronous Parameter ## {#alternatives-single-asynchronous-parameter}
 
 We explored a design where the parameters to the algorithms (ranges, iterators,
   invocables) could be provided asynchronously by the predecessor sender instead
@@ -480,9 +481,11 @@ auto fgh = just(v)
          | inplace(transform(h));
 ```
 
-As part of this design, we planned to have the asynchronous parallel algorithms
-  return a sender that sends the logical output of the algorithm, suitable for
-  piping into another parallel algorithm.
+## Logical Return Types ## {#alternatives-logical-return-types}
+
+As part of the single asynchronous parameter design, we planned to have the
+  asynchronous parallel algorithms return a sender that sends the logical output
+  of the algorithm, suitable for piping into another parallel algorithm.
 This asynchronous value will often differ from the return value of the
   corresponding non-parallel algorithm.
 For example, `transform` returns a single iterator to the end of the
@@ -661,6 +664,62 @@ We eventually reached the conclusion that this whole approach was too complex,
 The major downside to this approach is that `let_value` requires dynamic
   parallelism, which is undesirable on some platforms.
 This is discussed more in [[#issues-dynamic-asynchrony]].
+
+## Passthrough of Values from Predecessor ## {#passthrough-of-values-from-predecessor}
+
+Previously, we proposed that the sender returned by asynchronous algorithms
+  would send the values sent by the predecessor, followed by the result you
+would get by calling the serial algorithm (if it returns non-`void`).
+
+```
+sender_of<T> auto s0 = async::algorithm(schedule(sch), a, b, c, d);
+
+sender_of<int, bool> auto s1 = just(17, true);
+sender_of<int, bool, T> auto s2 = async::algorithm(s1, a, b, c, d);
+
+auto s3 =
+    schedule(sch)                      // `sender_of<void>`
+  | async::algorithm_x(a, b, c, d)     // `sender_of<T>`, algorithm's result is `T`
+  | then([] (T t) -> void { /* … */ }) // `sender_of<void>`
+  | async::algorithm_y(b, e, f);       // `sender_of<U>`, algorithm's result is `U`
+
+auto s4 =
+    just(17, true)                     // `sender_of<int, bool>`
+  | async::algorithm_x(a, b, c, d)     // `sender_of<int, bool, T>`, algorithm's result is `T`
+  | then([] (T t, int i, bool b) -> V  // `sender_of<V>`
+         { /* … */ })
+  | async::algorithm_y(b, e, f);       // `sender_of<V, U>`, algorithm's result is `U`
+```
+
+There is precedent for this design in `bulk`.
+`bulk` is a sender adaptor, does not take an explicit scheduler or execution
+  policy, and passes through the values sent by its predecessor.
+
+The advantage to this approach is that no information is discarded; you drop
+  neither the predecessor values (which might be needed as inputs to subsequent
+  operations) nor the result of the asynchronous algorithm.
+However, this came with the significant downside of added verbosity and
+  complexity, leading to pathological sender types in longer chains, such as:
+
+```
+vector<T> v(/* ... */);
+
+sender_of<vector<T>::iterator, vector<T>::iterator, vector<T>::iterator> fgh =
+    just()
+  | transform(v, begin(v), f)
+  | transform(v, begin(v), g)
+  | transform(v, begin(v), h);
+```
+
+This pass through arose out of the single asynchronous parameter design, and
+  may have made more sense in that context, or in a world where we had a
+  powerful pipeline operator that enabled point-free-style composition of
+  operations that take multiple inputs of varying shapes.
+However, we believe that with the current design, pass through does not make
+  sense.
+Algorithms should simply send their result.
+If the values sent by the predecessor need to be preserved, the predecessor
+  should be `spilt` before passing it to the algorithm.
 
 ## Attach Execution Policies to Schedulers or Vice Versa ## {#alternatives-attach-to-execution-policeis-or-schedulers}
 
