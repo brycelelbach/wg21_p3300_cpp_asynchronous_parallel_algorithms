@@ -106,29 +106,34 @@ They must use `sync_wait` to block pending the completion of both their
 
 Asynchronous parallel algorithms are sender adaptors - they take a sender and
   return a sender.
-The returned sender will send the result you would get by calling the serial
-  algorithm (if it's non-`void`), followed by the values sent by the predecessor
-  sender.
+The returned sender will send the values sent by the predecessor, followed by
+  the result you would get by calling the serial algorithm (if it returns
+  non-`void`).
+This "pass through" of values from the predecessor is similar to what `bulk`
+  does.
 
 ```
 sender_of<T> auto s0 = async::algorithm(schedule(sch), a, b, c, d);
 
 sender_of<int, bool> auto s1 = just(17, true);
-sender_of<T, int, bool> auto s2 = async::algorithm(s1, a, b, c, d);
+sender_of<int, bool, T> auto s2 = async::algorithm(s1, a, b, c, d);
 ```
 
 Asynchronous parallel algorithms are pipeable.
 
 ```
-sender_of<U> auto s0 = schedule(sch)
-                     | async::algorithm_x(a, b, c, d) // Result is type `T`.
-                     | then([] (T t) -> void { /* … */ })
-                     | async::algorithm_y(b, e, f);   // Result is type `U`.
+auto s0 =
+    schedule(sch)                      // `sender_of<void>`
+  | async::algorithm_x(a, b, c, d)     // `sender_of<T>`, algorithm's result is `T`
+  | then([] (T t) -> void { /* … */ }) // `sender_of<void>`
+  | async::algorithm_y(b, e, f);       // `sender_of<U>`, algorithm's result is `U`
 
-sender_of<U, V> auto s1 = just(17, true);
-                        | async::algorithm_x(a, b, c, d)
-                        | then([] (T t, int i, bool b) -> V { /* … */ })
-                        | async::algorithm_y(b, e, f);
+auto s1 =
+    just(17, true)                     // `sender_of<int, bool>`
+  | async::algorithm_x(a, b, c, d)     // `sender_of<int, bool, T>`, algorithm's result is `T`
+  | then([] (T t, int i, bool b) -> V  // `sender_of<V>`
+         { /* … */ })
+  | async::algorithm_y(b, e, f);       // `sender_of<V, U>`, algorithm's result is `V`
 ```
 
 The senders returned by asynchronous parallel algorithms are awaitable, so we
