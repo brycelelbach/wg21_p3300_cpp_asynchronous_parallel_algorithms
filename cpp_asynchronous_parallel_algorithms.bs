@@ -215,15 +215,15 @@ For example, if we have `{4 2 1 2}`, the maximum is `4`, and the normalized
 
 ```
 auto normalize_serial(range auto&& v) {
-  auto mx = fold_left(v, ranges::max{});
-  return transform(v, views::repeat(mx), begin(v), divides);
+  auto mx = fold_left(v, ranges::max);
+  return transform(v, views::repeat(mx), begin(v), divides{});
 }
 ```
 
 ```
 auto normalize_parallel(range auto&& v) {
-  auto mx = fold_left(par, v, ranges::max{});
-  return transform(par, v, views::repeat(mx), begin(v), divides);
+  auto mx = fold_left(par, v, ranges::max);
+  return transform(par, v, views::repeat(mx), begin(v), divides{});
 }
 ```
 
@@ -232,7 +232,7 @@ auto normalize_async(range auto&& v) {
   return async::fold_left(v, ranges::max{})
        | let_value([] (auto mx, range auto&& v) {
            return async::transform(
-             just(), v, views::repeat(mx), begin(v), divides);
+             just(), v, views::repeat(mx), begin(v), divides{});
          });
 }
 ```
