@@ -310,7 +310,7 @@ auto normalize_parallel(range auto&& v) {
 
 ```
 auto normalize_async_dataflow(range auto&& v) {
-  auto mx = async::fold_left(v, ranges::max{}) | split;
+  auto mx = async::fold_left(just(), v, ranges::max{}) | split;
   return async::transform(mx, v, mx | then(views::repeat), begin(v), divides{});
 }
 ```
