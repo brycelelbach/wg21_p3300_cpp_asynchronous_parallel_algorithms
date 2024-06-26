@@ -236,7 +236,7 @@ also(sender_of<A, B, …> auto, F f);
 Likewise, `send_error(e)` indicates to `then` and similar adaptors that `e`
   should be sent as an error by the returned sender.
 
-## `*_into` Reduction Algorithms ## {#design-into-reduction-algorithms}
+## `*_into` Algorithms ## {#design-into-reduction-algorithms}
 
 Many reduction standard algorithms (`reduce`, `max_element`, etc) return their
   result from the algorithm.
