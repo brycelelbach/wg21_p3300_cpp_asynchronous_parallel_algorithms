@@ -639,8 +639,8 @@ An iterator to the element past the last transformed element of `rng` and the
 <td>
 ```
 reduce(Range rng,
-        T init,
-        F f)
+       T init,
+       F f)
 ```
 <td>
 The sum as a T.
