@@ -284,23 +284,23 @@ For example, if we have `{4 2 1 2}`, the maximum is `4`, and the normalized
   range would be `{1, 1/2, 1/4, 1/2}`.
 
 ```
-auto normalize_serial(range auto&& v) {
+void normalize_serial(range auto&& v) {
   T mx{};
   max_element_into(v, mx);
-  return transform(v, views::repeat(mx), begin(v), divides{});
+  transform(v, views::repeat(mx), begin(v), divides{});
 }
 ```
 
 ```
-auto normalize_parallel(range auto&& v) {
+void normalize_parallel(range auto&& v) {
   T mx{};
   max_element_into(par, v, mx);
-  return transform(par, v, views::repeat(mx), begin(v), divides{});
+  transform(par, v, views::repeat(mx), begin(v), divides{});
 }
 ```
 
 ```
-auto normalize_async(sender auto&& pred, range auto&& v) {
+sender auto normalize_async(sender auto&& pred, range auto&& v) {
   auto tmp = pred | then([] { return T{}; });
   return let_value(tmp, [] (T&& mx) {
       return async::max_element_into(just(), v, mx)
@@ -317,7 +317,7 @@ This is a well-known [LeetCode problem](https://leetcode.com/problems/maximum-ga
 For example, the maximum gap of `{3, 6, 9, 1}` is `3`.
 
 ```
-auto maximum_gap_serial(range auto&& v) {
+T maximum_gap_serial(range auto&& v) {
   vector<T> buf(v);
   T mx{};
   sort(buf);
@@ -328,7 +328,7 @@ auto maximum_gap_serial(range auto&& v) {
 ```
 
 ```
-auto maximum_gap_parallel(range auto&& v) {
+T maximum_gap_parallel(range auto&& v) {
   vector<T> buf(v);
   T mx{};
   sort(par, buf);
@@ -359,9 +359,9 @@ For example, if we have `{1, 0, 2, 0, 2}`, then 3 units of water can be trapped.
 
 ```
 int rain_water_serial(range auto&& v) {
-  vector<T> buf(size(v));
-  T mx{};
-  T sum{};
+  vector<int> buf(size(v));
+  int mx{};
+  int sum{};
   max_element_into(v, mx);
   inclusive_scan(begin(v),  next(it), begin(buf), ranges::max);
   inclusive_scan(rbegin(v), reverse_iterator(it),  rbegin(buf), ranges::max);
@@ -372,9 +372,9 @@ int rain_water_serial(range auto&& v) {
 
 ```
 int rain_water_parallel(range auto&& v) {
-  vector<T> buf(size(v));
-  T mx{};
-  T sum{};
+  vector<int> buf(size(v));
+  int mx{};
+  int sum{};
   max_element_into(par, v, mx);
   inclusive_scan(par, begin(v),  next(it), begin(buf), ranges::max);
   inclusive_scan(par, rbegin(v), reverse_iterator(it),  rbegin(buf), ranges::max);
@@ -384,11 +384,11 @@ int rain_water_parallel(range auto&& v) {
 ```
 
 ```
-int rain_water_async(range auto&& v) {
+sender auto rain_water_async(range auto&& v) {
   auto tmp = pred | then([&] {
-    return send_values(vector<T>(size(v)), T{}, T{});
+    return send_values(vector<int>(size(v)), int{}, int{});
   });
-  return let_value(tmp, [] (vector<T>&& buf, T&& mx, T&& sum) {
+  return let_value(tmp, [] (vector<int>&& buf, int&& mx, int&& sum) {
       return async::max_element_into(just(), v, mx)
            | async::inclusive_scan(begin(v),  next(it), begin(buf), ranges::max)
            | async::inclusive_scan(rbegin(v), reverse_iterator(it),  rbegin(buf), ranges::max)
@@ -422,7 +422,7 @@ void upper_triangular_cholesky_factorization_parallel(
 ```
 
 ```
-sender_of<la_vector> upper_triangular_cholesky_factorization_async(
+sender auto upper_triangular_cholesky_factorization_async(
   sender auto&& pred, la_matrix A, la_vector b, la_vector x)
 {
   return pred
@@ -487,7 +487,7 @@ sender_of<T> async::reduce(sender auto&& pred,
 This gives us a straightforward way to express data dependencies.
 
 ```
-auto normalize_async_dataflow(range auto&& v) {
+sender auto normalize_async_dataflow(range auto&& v) {
   auto mx = async::fold_left(just(), v, ranges::max{}) | split;
   return async::transform(mx, v, mx | then(views::repeat), begin(v), divides{});
 }
@@ -504,7 +504,7 @@ sender auto maximum_gap_async_dataflow(range auto&& v) {
 ```
 
 ```
-int rain_water_async_dataflow(range auto&& v) {
+sender auto rain_water_async_dataflow(range auto&& v) {
   auto tmp = just(vector<T>(size(v))) | split;
   auto it = async::max_element(just(), v) | split;
   auto left = async::inclusive_scan(it,
@@ -591,7 +591,7 @@ We often had to use the `also` and `select` utilities and additionally insert
   scalar into a range view, get an iterator from a range, etc.
 
 ```
-auto normalize_async(range auto&& rng) {
+sender_of<range> auto normalize_async(range auto&& rng) {
   return async::max_element(rng)
        | then([] (auto rng, auto mx) {
            return send_values(rng, repeat(*mx));
@@ -599,7 +599,7 @@ auto normalize_async(range auto&& rng) {
        | inplace(async::transform(divides{}));
 }
 
-sender_of<la_vector> upper_triangular_cholesky_factorization_async(
+sender_of<la_vector> auto upper_triangular_cholesky_factorization_async(
   la_matrix A, la_vector b, la_vector x)
 {
   return just(transposed(A), upper_triangle, explicit_diagonal, b, x)
