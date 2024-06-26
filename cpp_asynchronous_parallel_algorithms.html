@@ -2379,19 +2379,19 @@ We propose adding such variants of at least the reduction algorithms to ease
   maximum element in the range.
 For example, if we have <code class="highlight"><c- p>{</c-><c- mi>4</c-> <c- mi>2</c-> <c- mi>1</c-> <c- mi>2</c-><c- p>}</c-></code>, the maximum is <code class="highlight"><c- mi>4</c-></code>, and the normalized
   range would be <code class="highlight"><c- p>{</c-><c- mi>1</c-><c- p>,</c-> <c- mi>1</c-><c- o>/</c-><c- mi>2</c-><c- p>,</c-> <c- mi>1</c-><c- o>/</c-><c- mi>4</c-><c- p>,</c-> <c- mi>1</c-><c- o>/</c-><c- mi>2</c-><c- p>}</c-></code>.</p>
-<pre class="highlight"><c- k>auto</c-> <c- n>normalize_serial</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
+<pre class="highlight"><c- b>void</c-> <c- nf>normalize_serial</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
   <c- n>T</c-> <c- n>mx</c-><c- p>{};</c->
   <c- n>max_element_into</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>mx</c-><c- p>);</c->
-  <c- k>return</c-> <c- n>transform</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>(</c-><c- n>mx</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>{});</c->
+  <c- n>transform</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>(</c-><c- n>mx</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>{});</c->
 <c- p>}</c->
 </pre>
-<pre class="highlight"><c- k>auto</c-> <c- n>normalize_parallel</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
+<pre class="highlight"><c- b>void</c-> <c- nf>normalize_parallel</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
   <c- n>T</c-> <c- n>mx</c-><c- p>{};</c->
   <c- n>max_element_into</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>v</c-><c- p>,</c-> <c- n>mx</c-><c- p>);</c->
-  <c- k>return</c-> <c- n>transform</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>v</c-><c- p>,</c-> <c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>(</c-><c- n>mx</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>{});</c->
+  <c- n>transform</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>v</c-><c- p>,</c-> <c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>(</c-><c- n>mx</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>{});</c->
 <c- p>}</c->
 </pre>
-<pre class="highlight"><c- k>auto</c-> <c- n>normalize_async</c-><c- p>(</c-><c- n>sender</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>pred</c-><c- p>,</c-> <c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
+<pre class="highlight"><c- n>sender</c-> <c- k>auto</c-> <c- n>normalize_async</c-><c- p>(</c-><c- n>sender</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>pred</c-><c- p>,</c-> <c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
   <c- k>auto</c-> <c- n>tmp</c-> <c- o>=</c-> <c- n>pred</c-> <c- o>|</c-> <c- n>then</c-><c- p>([]</c-> <c- p>{</c-> <c- k>return</c-> <c- n>T</c-><c- p>{};</c-> <c- p>});</c->
   <c- k>return</c-> <c- n>let_value</c-><c- p>(</c-><c- n>tmp</c-><c- p>,</c-> <c- p>[]</c-> <c- p>(</c-><c- n>T</c-><c- o>&amp;&amp;</c-> <c- n>mx</c-><c- p>)</c-> <c- p>{</c->
       <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element_into</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>,</c-> <c- n>mx</c-><c- p>)</c->
@@ -2404,7 +2404,7 @@ For example, if we have <code class="highlight"><c- p>{</c-><c- mi>4</c-> <c- mi
   of the range.
 This is a well-known <a href="https://leetcode.com/problems/maximum-gap">LeetCode problem</a>.
 For example, the maximum gap of <code class="highlight"><c- p>{</c-><c- mi>3</c-><c- p>,</c-> <c- mi>6</c-><c- p>,</c-> <c- mi>9</c-><c- p>,</c-> <c- mi>1</c-><c- p>}</c-></code> is <code class="highlight"><c- mi>3</c-></code>.</p>
-<pre class="highlight"><c- k>auto</c-> <c- n>maximum_gap_serial</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
+<pre class="highlight"><c- n>T</c-> <c- nf>maximum_gap_serial</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
   <c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>buf</c-><c- p>(</c-><c- n>v</c-><c- p>);</c->
   <c- n>T</c-> <c- n>mx</c-><c- p>{};</c->
   <c- n>sort</c-><c- p>(</c-><c- n>buf</c-><c- p>);</c->
@@ -2413,7 +2413,7 @@ For example, the maximum gap of <code class="highlight"><c- p>{</c-><c- mi>3</c-
   <c- k>return</c-> <c- n>mx</c-><c- p>;</c->
 <c- p>}</c->
 </pre>
-<pre class="highlight"><c- k>auto</c-> <c- n>maximum_gap_parallel</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
+<pre class="highlight"><c- n>T</c-> <c- nf>maximum_gap_parallel</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
   <c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>buf</c-><c- p>(</c-><c- n>v</c-><c- p>);</c->
   <c- n>T</c-> <c- n>mx</c-><c- p>{};</c->
   <c- n>sort</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>buf</c-><c- p>);</c->
@@ -2438,9 +2438,9 @@ For example, the maximum gap of <code class="highlight"><c- p>{</c-><c- mi>3</c-
 This is a well-known <a href="https://leetcode.com/problems/trapping-rain-water">LeetCode problem</a>.
 For example, if we have <code class="highlight"><c- p>{</c-><c- mi>1</c-><c- p>,</c-> <c- mi>0</c-><c- p>,</c-> <c- mi>2</c-><c- p>,</c-> <c- mi>0</c-><c- p>,</c-> <c- mi>2</c-><c- p>}</c-></code>, then 3 units of water can be trapped.</p>
 <pre class="highlight"><c- b>int</c-> <c- nf>rain_water_serial</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-  <c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>buf</c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>));</c->
-  <c- n>T</c-> <c- n>mx</c-><c- p>{};</c->
-  <c- n>T</c-> <c- n>sum</c-><c- p>{};</c->
+  <c- n>vector</c-><c- o>&lt;</c-><c- b>int</c-><c- o>></c-> <c- n>buf</c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>));</c->
+  <c- b>int</c-> <c- n>mx</c-><c- p>{};</c->
+  <c- b>int</c-> <c- n>sum</c-><c- p>{};</c->
   <c- n>max_element_into</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>mx</c-><c- p>);</c->
   <c- n>inclusive_scan</c-><c- p>(</c-><c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c->  <c- n>next</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
   <c- n>inclusive_scan</c-><c- p>(</c-><c- n>rbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>reverse_iterator</c-><c- p>(</c-><c- n>it</c-><c- p>),</c->  <c- n>rbegin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
@@ -2449,9 +2449,9 @@ For example, if we have <code class="highlight"><c- p>{</c-><c- mi>1</c-><c- p>,
 <c- p>}</c->
 </pre>
 <pre class="highlight"><c- b>int</c-> <c- nf>rain_water_parallel</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-  <c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>buf</c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>));</c->
-  <c- n>T</c-> <c- n>mx</c-><c- p>{};</c->
-  <c- n>T</c-> <c- n>sum</c-><c- p>{};</c->
+  <c- n>vector</c-><c- o>&lt;</c-><c- b>int</c-><c- o>></c-> <c- n>buf</c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>));</c->
+  <c- b>int</c-> <c- n>mx</c-><c- p>{};</c->
+  <c- b>int</c-> <c- n>sum</c-><c- p>{};</c->
   <c- n>max_element_into</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>v</c-><c- p>,</c-> <c- n>mx</c-><c- p>);</c->
   <c- n>inclusive_scan</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c->  <c- n>next</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
   <c- n>inclusive_scan</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>rbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>reverse_iterator</c-><c- p>(</c-><c- n>it</c-><c- p>),</c->  <c- n>rbegin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
@@ -2459,11 +2459,11 @@ For example, if we have <code class="highlight"><c- p>{</c-><c- mi>1</c-><c- p>,
   <c- k>return</c-> <c- n>sum</c-><c- p>;</c->
 <c- p>}</c->
 </pre>
-<pre class="highlight"><c- b>int</c-> <c- nf>rain_water_async</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
+<pre class="highlight"><c- n>sender</c-> <c- k>auto</c-> <c- n>rain_water_async</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
   <c- k>auto</c-> <c- n>tmp</c-> <c- o>=</c-> <c- n>pred</c-> <c- o>|</c-> <c- n>then</c-><c- p>([</c-><c- o>&amp;</c-><c- p>]</c-> <c- p>{</c->
-    <c- k>return</c-> <c- n>send_values</c-><c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>)),</c-> <c- n>T</c-><c- p>{},</c-> <c- n>T</c-><c- p>{});</c->
+    <c- k>return</c-> <c- n>send_values</c-><c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- b>int</c-><c- o>></c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>)),</c-> <c- b>int</c-><c- p>{},</c-> <c- b>int</c-><c- p>{});</c->
   <c- p>});</c->
-  <c- k>return</c-> <c- n>let_value</c-><c- p>(</c-><c- n>tmp</c-><c- p>,</c-> <c- p>[]</c-> <c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>>&amp;&amp;</c-> <c- n>buf</c-><c- p>,</c-> <c- n>T</c-><c- o>&amp;&amp;</c-> <c- n>mx</c-><c- p>,</c-> <c- n>T</c-><c- o>&amp;&amp;</c-> <c- n>sum</c-><c- p>)</c-> <c- p>{</c->
+  <c- k>return</c-> <c- n>let_value</c-><c- p>(</c-><c- n>tmp</c-><c- p>,</c-> <c- p>[]</c-> <c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- b>int</c-><c- o>>&amp;&amp;</c-> <c- n>buf</c-><c- p>,</c-> <c- b>int</c-><c- o>&amp;&amp;</c-> <c- n>mx</c-><c- p>,</c-> <c- b>int</c-><c- o>&amp;&amp;</c-> <c- n>sum</c-><c- p>)</c-> <c- p>{</c->
       <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element_into</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>,</c-> <c- n>mx</c-><c- p>)</c->
            <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c-><c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c->  <c- n>next</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>)</c->
            <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c-><c- n>rbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>reverse_iterator</c-><c- p>(</c-><c- n>it</c-><c- p>),</c->  <c- n>rbegin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>)</c->
@@ -2492,7 +2492,7 @@ For example, if we have <code class="highlight"><c- p>{</c-><c- mi>1</c-><c- p>,
     <c- n>divides</c-><c- p>{});</c->
 <c- p>}</c->
 </pre>
-<pre class="highlight"><c- n>sender_of</c-><c- o>&lt;</c-><c- n>la_vector</c-><c- o>></c-> <c- n>upper_triangular_cholesky_factorization_async</c-><c- p>(</c->
+<pre class="highlight"><c- n>sender</c-> <c- k>auto</c-> <c- n>upper_triangular_cholesky_factorization_async</c-><c- p>(</c->
   <c- n>sender</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>pred</c-><c- p>,</c-> <c- n>la_matrix</c-> <c- n>A</c-><c- p>,</c-> <c- n>la_vector</c-> <c- n>b</c-><c- p>,</c-> <c- n>la_vector</c-> <c- n>x</c-><c- p>)</c->
 <c- p>{</c->
   <c- k>return</c-> <c- n>pred</c->
@@ -2543,7 +2543,7 @@ This design is inspired by <a href="https://hpx-docs.stellar-group.org/branches/
 <c- p>}</c->
 </pre>
    <p>This gives us a straightforward way to express data dependencies.</p>
-<pre class="highlight"><c- k>auto</c-> <c- n>normalize_async_dataflow</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
+<pre class="highlight"><c- n>sender</c-> <c- k>auto</c-> <c- n>normalize_async_dataflow</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
   <c- k>auto</c-> <c- n>mx</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>fold_left</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>,</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>{})</c-> <c- o>|</c-> <c- n>split</c-><c- p>;</c->
   <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>transform</c-><c- p>(</c-><c- n>mx</c-><c- p>,</c-> <c- n>v</c-><c- p>,</c-> <c- n>mx</c-> <c- o>|</c-> <c- n>then</c-><c- p>(</c-><c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>{});</c->
 <c- p>}</c->
@@ -2556,7 +2556,7 @@ This design is inspired by <a href="https://hpx-docs.stellar-group.org/branches/
        <c- o>|</c-> <c- n>then</c-><c- p>([]</c-> <c- p>(</c-><c- k>auto</c-> <c- n>it</c-><c- p>)</c-> <c- p>{</c-> <c- k>return</c-> <c- o>*</c-><c- n>it</c-><c- p>;</c-> <c- p>});</c->
 <c- p>}</c->
 </pre>
-<pre class="highlight"><c- b>int</c-> <c- nf>rain_water_async_dataflow</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
+<pre class="highlight"><c- n>sender</c-> <c- k>auto</c-> <c- n>rain_water_async_dataflow</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
   <c- k>auto</c-> <c- n>tmp</c-> <c- o>=</c-> <c- n>just</c-><c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>)))</c-> <c- o>|</c-> <c- n>split</c-><c- p>;</c->
   <c- k>auto</c-> <c- n>it</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>)</c-> <c- o>|</c-> <c- n>split</c-><c- p>;</c->
   <c- k>auto</c-> <c- n>left</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c-><c- n>it</c-><c- p>,</c->
@@ -2626,7 +2626,7 @@ We wanted to enable the same point-free style programming used by range adaptor
 We often had to use the <code class="highlight"><c- n>also</c-></code> and <code class="highlight"><c- n>select</c-></code> utilities and additionally insert <code class="highlight"><c- n>then</c-></code> adaptors that would adjust parameters in between algorithm
   invocations - increment an iterator by one, dereference an iterator, turn a
   scalar into a range view, get an iterator from a range, etc.</p>
-<pre class="highlight"><c- k>auto</c-> <c- n>normalize_async</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>rng</c-><c- p>)</c-> <c- p>{</c->
+<pre class="highlight"><c- n>sender_of</c-><c- o>&lt;</c-><c- n>range</c-><c- o>></c-> <c- k>auto</c-> <c- n>normalize_async</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>rng</c-><c- p>)</c-> <c- p>{</c->
   <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element</c-><c- p>(</c-><c- n>rng</c-><c- p>)</c->
        <c- o>|</c-> <c- n>then</c-><c- p>([]</c-> <c- p>(</c-><c- k>auto</c-> <c- n>rng</c-><c- p>,</c-> <c- k>auto</c-> <c- n>mx</c-><c- p>)</c-> <c- p>{</c->
            <c- k>return</c-> <c- n>send_values</c-><c- p>(</c-><c- n>rng</c-><c- p>,</c-> <c- n>repeat</c-><c- p>(</c-><c- o>*</c-><c- n>mx</c-><c- p>));</c->
@@ -2634,7 +2634,7 @@ We often had to use the <code class="highlight"><c- n>also</c-></code> and <code
        <c- o>|</c-> <c- n>inplace</c-><c- p>(</c-><c- n>async</c-><c- o>::</c-><c- n>transform</c-><c- p>(</c-><c- n>divides</c-><c- p>{}));</c->
 <c- p>}</c->
 
-<c- n>sender_of</c-><c- o>&lt;</c-><c- n>la_vector</c-><c- o>></c-> <c- n>upper_triangular_cholesky_factorization_async</c-><c- p>(</c->
+<c- n>sender_of</c-><c- o>&lt;</c-><c- n>la_vector</c-><c- o>></c-> <c- k>auto</c-> <c- n>upper_triangular_cholesky_factorization_async</c-><c- p>(</c->
   <c- n>la_matrix</c-> <c- n>A</c-><c- p>,</c-> <c- n>la_vector</c-> <c- n>b</c-><c- p>,</c-> <c- n>la_vector</c-> <c- n>x</c-><c- p>)</c->
 <c- p>{</c->
   <c- k>return</c-> <c- n>just</c-><c- p>(</c-><c- n>transposed</c-><c- p>(</c-><c- n>A</c-><c- p>),</c-> <c- n>upper_triangle</c-><c- p>,</c-> <c- n>explicit_diagonal</c-><c- p>,</c-> <c- n>b</c-><c- p>,</c-> <c- n>x</c-><c- p>)</c->
