@@ -150,8 +150,8 @@ A separate paper on the related but orthogonal topic of parallelizing
 
 ## Asynchronous Parameters ## {#design-asynchronous-parameters}
 
-We need to support two types of dependencies when composing asynchronous
-  algorithms.
+There are two types of two types of dependencies that we may want to express
+  when composing asynchronous algorithms.
 
 - Data dependencies: The output of asynchronous operation `X` (a sender) may
   be needed as the input to a subsequent asynchronous operation `Y`. We want to
@@ -174,47 +174,12 @@ The asynchronous parallel algorithm will perform its work on the predecessor
 We explored passing inputs to the algorithm through the
   predecessor sender in [[#alternatives-single-asynchronous-parameter]], but
   decided against that approach.
+We also explored allowing any of the parameters to be senders in
+  [[#alternatives-dataflow-asynchronous-parameters]],
+  but we also discarded that approach.
 
-The rest of the parameters of an asynchronous parallel algorithm correspond to
-  the parameters of the serial algorithm, which we'll call the algorithmic
-  parameters.
-In serial algorithms, each of these algorithmic parameters is immediately
-  available, meaning they are a non-sender object - a range, an iterator, a
-  scalar, an operation, etc.
-In asynchronous parallel algorithms, each of these algorithmic parameters
-  is either an immediately available object or a sender of the same type of
-  object.
-
-```
-template <class T>
-concept immediate_or_sender = T || sender_of<T>;
-```
-
-Asynchronous parallel algorithms perform a `when_all` on all of the algorithmic
-  parameters that are senders, and then launch their work on the predecessor
-  sender's scheduler.
-
-```
-sender_of<T> async::__reduce(sender auto&& pred,
-                             range auto&& rng,
-                             T init,
-                             Op op);
-
-sender_of<T> async::reduce(sender auto&& pred,
-                           sender_or_immediate<range> auto&& rng,
-                           sender_or_immediate<T> init,
-                           sender_or_immediate<Op> op)
-{
-  return when_all(__collect_senders(rng, init, op))
-       | let_value([] (range auto&& rng, T init, Op op) {
-           return pred | async::__reduce(rng, init, op);
-         });
-}
-```
-
-This gives us a straightforward way to express data dependencies.
-
-This design is inspired by [HPX's dataflow](https://hpx-docs.stellar-group.org/branches/master/html/libs/core/async_base/api/dataflow.html) primitive.
+We settled on a model where we can only express execution dependencies directly.
+This avoids complexity and covers many of the simple use cases elegantly.
 
 ## Properties of Execution ## {#design-properties-of-execution}
 
@@ -271,6 +236,30 @@ also(sender_of<A, B, …> auto, F f);
 Likewise, `send_error(e)` indicates to `then` and similar adaptors that `e`
   should be sent as an error by the returned sender.
 
+## `*_into` Reduction Algorithms ## {#design-into-reduction-algorithms}
+
+Many reduction standard algorithms (`reduce`, `max_element`, etc) return their
+  result from the algorithm.
+Without a way to pass asynchronous dependencies, we found it unwieldy to compose
+  simple patterns involving such algorithms.
+
+```
+iterator auto max_element(range auto rng, auto comparator);
+
+void max_element_into(range auto rng, T& output, auto comparator);
+```
+
+In popular parallel libraries such as [CUB](https://nvidia.github.io/cccl/cub/index.html),
+  reduction algorithms do not return their result, but instead take either a
+  reference or an iterator to a location to write the output.
+In synchronous or fire-or-forget interfaces, this allows you to avoid a memory
+  transfer back to the caller, instead specifying where the result should live.
+This approach can also be used for shape-changing algorithms such as `copy_if`.
+
+When using this pattern, we found it much easier to express the code we wanted.
+We propose adding such variants of at least the reduction algorithms to ease
+  asynchronous composition.
+
 # Examples # {#examples}
 
 ## Basics ## {#examples-basics}
@@ -296,39 +285,28 @@ For example, if we have `{4 2 1 2}`, the maximum is `4`, and the normalized
 
 ```
 auto normalize_serial(range auto&& v) {
-  auto mx = fold_left(v, ranges::max);
+  T mx{};
+  max_element_into(v, mx);
   return transform(v, views::repeat(mx), begin(v), divides{});
 }
 ```
 
 ```
 auto normalize_parallel(range auto&& v) {
-  auto mx = fold_left(par, v, ranges::max);
+  T mx{};
+  max_element_into(par, v, mx);
   return transform(par, v, views::repeat(mx), begin(v), divides{});
 }
 ```
 
 ```
-auto normalize_async_dataflow(range auto&& v) {
-  auto mx = async::fold_left(just(), v, ranges::max{}) | split;
-  return async::transform(mx, v, mx | then(views::repeat), begin(v), divides{});
+auto normalize_async(sender auto&& pred, range auto&& v) {
+  auto tmp = pred | then([] { return T{}; });
+  return let_value(tmp, [] (T&& mx) {
+      return async::max_element_into(just(), v, mx)
+           | async::transform(v, views::repeat(mx), begin(v), divides{});
+    });
 }
-```
-
-```
-auto normalize_coroutine(range auto&& v) {
-  auto mx = async::fold_left(just(), v, ranges::max{}) | split;
-  co_return async::transform(mx, v, views::repeat(co_await mx), begin(v), divides);
-}
-```
-
-```
-auto normalize_async_no_sender_parameters(range auto&& v) {
-  return async::fold_left(just(), v, ranges::max{})
-       | let_value([] (auto mx, range auto&& v) {
-           return async::transform(
-             just(), v, views::repeat(mx), begin(v), divides{});
-         });
 ```
 
 ## Maximum Gap ## {#examples-maximum-gap}
@@ -340,41 +318,35 @@ For example, the maximum gap of `{3, 6, 9, 1}` is `3`.
 
 ```
 auto maximum_gap_serial(range auto&& v) {
-  vector<T> tmp(v);
-  sort(tmp);
-  adjacent_difference(tmp, begin(tmp));
-  return *max_element(tmp | drop(1));
+  vector<T> buf(v);
+  T mx{};
+  sort(buf);
+  adjacent_difference(buf, begin(buf));
+  max_element_into(buf | drop(1), mx);
+  return mx;
 }
 ```
 
 ```
-sender auto maximum_gap_async_dataflow(range auto&& v) {
-  auto tmp = just(vector<T>(v))) | split;
-  return async::sort(just(), tmp);
-       | async::adjacent_difference(tmp, tmp | then(begin));
-       | async::max_element(tmp | then(drop(1)));
-       | then([] (auto it) { return *it; });
+auto maximum_gap_parallel(range auto&& v) {
+  vector<T> buf(v);
+  T mx{};
+  sort(par, buf);
+  adjacent_difference(par, buf, begin(buf));
+  max_element_into(par, buf | drop(1), mx);
+  return mx;
 }
 ```
 
 ```
-sender auto maximum_gap_coroutine(range auto&& v) {
-  vector<T> tmp(v);
-  auto s0 = async::sort(just(), tmp);
-  auto s1 = async::adjacent_difference(s0, tmp, begin(tmp));
-  co_return *co_await async::max_element(s1, tmp | drop(1));
-}
-```
-
-```
-sender auto maximum_gap_async_no_sender_parameter(range auto&& v) {
-  return just(vector<T>(v)))
-       | let_value([] (range auto&& tmp) {
-           return async::sort(just(), tmp)
-                | async::adjacent_difference(tmp, begin(tmp))
-                | async::max_element(tmp | drop(1))
-                | then([] (auto it) { return *it; });
-         });
+sender auto maximum_gap_async(sender auto&& pred, range auto&& v) {
+  auto tmp = pred | then([&] { return send_values(vector<T>(v), T{}); });
+  return let_value(tmp, [] (vector<T>&& buf, T&& mx) {
+      return async::sort(just(), tmp)
+           | async::adjacent_difference(buf, begin(buf))
+           | async::max_element_into(buf | drop(1), mx)
+           | then([] { return mx; });
+    });
 }
 ```
 
@@ -385,67 +357,44 @@ Given a range of non-negative numbers representing an elevation map where the
 This is a well-known [LeetCode problem](https://leetcode.com/problems/trapping-rain-water).
 For example, if we have `{1, 0, 2, 0, 2}`, then 3 units of water can be trapped.
 
-
 ```
 int rain_water_serial(range auto&& v) {
-  vector<T> tmp(size(v));
-  auto it = max_element(v);
-  inclusive_scan(begin(v),  next(it), begin(tmp), ranges::max);
-  inclusive_scan(rbegin(v), reverse_iterator(it),  rbegin(tmp), ranges::max);
-  return transform_reduce(tmp, cbegin(v), 0, plus{}, minus{});
+  vector<T> buf(size(v));
+  T mx{};
+  T sum{};
+  max_element_into(v, mx);
+  inclusive_scan(begin(v),  next(it), begin(buf), ranges::max);
+  inclusive_scan(rbegin(v), reverse_iterator(it),  rbegin(buf), ranges::max);
+  transform_reduce_into(buf, cbegin(v), sum, 0, plus{}, minus{});
+  return sum;
 }
 ```
 
 ```
-int rain_water_async_dataflow(range auto&& v) {
-  auto tmp = just(vector<T>(size(v))) | split;
-  auto it = async::max_element(just(), v) | split;
-  auto left = async::inclusive_scan(it,
-    begin(v), it | then(next), tmp | then(begin), ranges::max);
-  auto right = async::inclusive_scan(it,
-    rbegin(v), it | then([] (auto i) { return reverse_iterator(i) }),
-    tmp | then(rbegin), ranges::max);
-  return async::transform_reduce(when_all(left, right),
-    tmp, cbegin(v), 0, plus{}, minus{});
+int rain_water_parallel(range auto&& v) {
+  vector<T> buf(size(v));
+  T mx{};
+  T sum{};
+  max_element_into(par, v, mx);
+  inclusive_scan(par, begin(v),  next(it), begin(buf), ranges::max);
+  inclusive_scan(par, rbegin(v), reverse_iterator(it),  rbegin(buf), ranges::max);
+  transform_reduce_into(par, buf, cbegin(v), sum, 0, plus{}, minus{});
+  return sum;
 }
 ```
 
 ```
-sender_of<int> auto rain_water_coroutine(range auto&& v) {
-  vector<T> tmp(size(v), 0);
-  auto it = async::max_element(just(), v) | split;
-  auto left = async::inclusive_scan(
-    it, begin(v),  next(co_await it), begin(tmp), ranges::max);
-  auto right = async::inclusive_scan(
-    it, rbegin(v), reverse_iterator(co_await it), rbegin(tmp), ranges::max);
-  co_return async::transform_reduce(co_await when_all(left, right),
-    tmp, cbegin(v), 0, plus{}, minus{});
-}
-```
-
-```
-sender_of<int> auto rain_water_async_no_sender_parameters(range auto&& v) {
-  return just(vector<T>(size(v))))
-       | let_value([&v] (range auto&& tmp) {
-           auto it = async::max_element(just(), v) | split;
-
-           auto left = it
-                       | let_value([&v] (auto it) {
-                           return async::inclusive_scan(
-                             just(), begin(v), next(it), begin(tmp),
-                             ranges::max);
-                         });
-
-           auto right = it
-                       | let_value([&v] (auto it) {
-                           return async::inclusive_scan(
-                             just(), rbegin(v), reverse_iterator(it), rbegin(tmp),
-                             ranges::max);
-                         });
-
-           return when_all(sleft, right)
-                | async::transform_reduce(tmp, cbegin(v), 0, plus{}, minus{});
-         });
+int rain_water_async(range auto&& v) {
+  auto tmp = pred | then([&] {
+    return send_values(vector<T>(size(v)), T{}, T{});
+  });
+  return let_value(tmp, [] (vector<T>&& buf, T&& mx, T&& sum) {
+      return async::max_element_into(just(), v, mx)
+           | async::inclusive_scan(begin(v),  next(it), begin(buf), ranges::max)
+           | async::inclusive_scan(rbegin(v), reverse_iterator(it),  rbegin(buf), ranges::max)
+           | async::transform_reduce_into(buf, cbegin(v), sum, 0, plus{}, minus{})
+           | then([] { return sum });
+    });
 }
 ```
 
@@ -474,9 +423,9 @@ void upper_triangular_cholesky_factorization_parallel(
 
 ```
 sender_of<la_vector> upper_triangular_cholesky_factorization_async(
-  la_matrix A, la_vector b, la_vector x)
+  sender auto&& pred, la_matrix A, la_vector b, la_vector x)
 {
-  return just(x)
+  return pred
          // Solve U^T c = b, using x to store c
        | async::triangular_matrix_vector_solve(
            transposed(A), upper_triangle, explicit_diagonal,
@@ -493,7 +442,105 @@ sender_of<la_vector> upper_triangular_cholesky_factorization_async(
 
 # Alternatives # {#alternatives}
 
-## Single Asynchronous Parameter ## {#alternatives-single-asynchronous-parameter}
+## Asynchronous Parameters ## {#alternatives-asynchronous-parameters}
+
+### Dataflow Asynchronous Parameters ### {#alternatives-dataflow-asynchronous-parameters}
+
+We explored the idea of allowing any parameter of an asynchronous parallel
+  algorithm to be a sender.
+In serial algorithms, each of these parameters is immediately available,
+  meaning they are a non-sender object.
+These parameters are either ranges, iterators, scalars, or operations.
+
+In this proposed design, each of these parameters could be either an
+  immediately available object or a sender of the same type of object.
+This design is inspired by [HPX's dataflow](https://hpx-docs.stellar-group.org/branches/master/html/libs/core/async_base/api/dataflow.html)
+  primitive.
+
+```
+template <class T>
+concept immediate_or_sender = T || sender_of<T>;
+```
+
+Asynchronous parallel algorithms would perform a `when_all` on all of the
+  algorithmic parameters that are senders, and then launch their work on the
+  predecessor sender's scheduler.
+
+```
+sender_of<T> async::__reduce(sender auto&& pred,
+                             range auto&& rng,
+                             T init,
+                             Op op);
+
+sender_of<T> async::reduce(sender auto&& pred,
+                           sender_or_immediate<range> auto&& rng,
+                           sender_or_immediate<T> init,
+                           sender_or_immediate<Op> op)
+{
+  return when_all(__collect_senders(rng, init, op))
+       | let_value([] (range auto&& rng, T init, Op op) {
+           return pred | async::__reduce(rng, init, op);
+         });
+}
+```
+
+This gives us a straightforward way to express data dependencies.
+
+```
+auto normalize_async_dataflow(range auto&& v) {
+  auto mx = async::fold_left(just(), v, ranges::max{}) | split;
+  return async::transform(mx, v, mx | then(views::repeat), begin(v), divides{});
+}
+```
+
+```
+sender auto maximum_gap_async_dataflow(range auto&& v) {
+  auto tmp = just(vector<T>(v))) | split;
+  return async::sort(just(), tmp);
+       | async::adjacent_difference(tmp, tmp | then(begin));
+       | async::max_element(tmp | then(drop(1)));
+       | then([] (auto it) { return *it; });
+}
+```
+
+```
+int rain_water_async_dataflow(range auto&& v) {
+  auto tmp = just(vector<T>(size(v))) | split;
+  auto it = async::max_element(just(), v) | split;
+  auto left = async::inclusive_scan(it,
+    begin(v), it | then(next), tmp | then(begin), ranges::max);
+  auto right = async::inclusive_scan(it,
+    rbegin(v), it | then([] (auto i) { return reverse_iterator(i) }),
+    tmp | then(rbegin), ranges::max);
+  return async::transform_reduce(when_all(left, right),
+    tmp, cbegin(v), 0, plus{}, minus{});
+}
+```
+
+We did consider omitting the predecessor sender, however then it would become
+  unclear where the algorithm would run, just as it can be for `when_all`.
+It would also leave us unable to express execution-only dependencies in a clear
+  fashion.
+
+
+We ran into a few problems with this design.
+In many cases it lead to senders being passed and connected multiple times.
+This might happen when passing a sender to multiple different algorithm calls,
+  because they need to operate on the same entity.
+It could also happen if you need to pass a sender both as the predecessor (to
+  indicate where completion should occur) and as an input to the algorithm.
+
+Connecting senders multiple times is problematic in this context.
+It is easy to accidentally copy a sender and duplicate computations that may be
+  expensive.
+In fact, this is often the default behavior if you don't go out of your way to
+  avoid it.
+Alternatively, you must judiciously use `split`, but this introduces dynamic
+  allocation and synchronization.
+Additionally, there seems to be no way to get a non-const lvalue reference to
+  be sent to multiple receivers even with `split`.
+
+### Single Asynchronous Parameter ### {#alternatives-single-asynchronous-parameter}
 
 We explored a design where the parameters to the algorithms (ranges, iterators,
   invocables) could be provided asynchronously by the predecessor sender instead
@@ -545,9 +592,9 @@ We often had to use the `also` and `select` utilities and additionally insert
 
 ```
 auto normalize_async(range auto&& rng) {
-  return async::fold_left(rng, max)
+  return async::max_element(rng)
        | then([] (auto rng, auto mx) {
-           return send_values(rng, repeat(mx));
+           return send_values(rng, repeat(*mx));
          })
        | inplace(async::transform(divides{}));
 }
@@ -969,7 +1016,9 @@ table, th, tr, td {
 
 ## R1 ## {#changelog-r1}
 
-- Add HPX-dataflow-inspired asynchronous parameters.
+- Add section exploring HPX-dataflow-inspired asynchronous parameters.
+- Change examples to take a predecessor sender.
+- Switch to `*_into` variant for reductions.
 - Change predecessor sender value passthrough to append instead of prepending.
 - Remove passthrough of values from the predecessor from the proposed design,
     but leave it in the alternatives section.
