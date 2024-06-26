@@ -324,7 +324,7 @@ auto normalize_coroutine(range auto&& v) {
 
 ```
 auto normalize_async_no_sender_parameters(range auto&& v) {
-  return async::fold_left(v, ranges::max{})
+  return async::fold_left(just(), v, ranges::max{})
        | let_value([] (auto mx, range auto&& v) {
            return async::transform(
              just(), v, views::repeat(mx), begin(v), divides{});
