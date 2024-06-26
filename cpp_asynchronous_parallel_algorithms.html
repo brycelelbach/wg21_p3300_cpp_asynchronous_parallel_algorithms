@@ -2101,7 +2101,7 @@ dfn > a.self-link::before      { content: "#"; }
   <div class="head">
    <p data-fill-with="logo"></p>
    <h1 class="p-name no-ref" id="title">D3300R1<br>C++ Asynchronous Parallel Algorithms</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Proposal, <time class="dt-updated" datetime="2024-06-25">2024-06-25</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Proposal, <time class="dt-updated" datetime="2024-06-26">2024-06-26</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt class="editor">Author:
@@ -2132,6 +2132,7 @@ dfn > a.self-link::before      { content: "#"; }
       <li><a href="#design-asynchronous-parameters"><span class="secno">3.3</span> <span class="content">Asynchronous Parameters</span></a>
       <li><a href="#design-properties-of-execution"><span class="secno">3.4</span> <span class="content">Properties of Execution</span></a>
       <li><a href="#design-compositional-utilities"><span class="secno">3.5</span> <span class="content">Compositional Utilities</span></a>
+      <li><a href="#design-into-reduction-algorithms"><span class="secno">3.6</span> <span class="content"><code class="highlight"><c- o>*</c-><c- n>_into</c-></code> Reduction Algorithms</span></a>
      </ol>
     <li>
      <a href="#examples"><span class="secno">4</span> <span class="content">Examples</span></a>
@@ -2145,7 +2146,12 @@ dfn > a.self-link::before      { content: "#"; }
     <li>
      <a href="#alternatives"><span class="secno">5</span> <span class="content">Alternatives</span></a>
      <ol class="toc">
-      <li><a href="#alternatives-single-asynchronous-parameter"><span class="secno">5.1</span> <span class="content">Single Asynchronous Parameter</span></a>
+      <li>
+       <a href="#alternatives-asynchronous-parameters"><span class="secno">5.1</span> <span class="content">Asynchronous Parameters</span></a>
+       <ol class="toc">
+        <li><a href="#alternatives-dataflow-asynchronous-parameters"><span class="secno">5.1.1</span> <span class="content">Dataflow Asynchronous Parameters</span></a>
+        <li><a href="#alternatives-single-asynchronous-parameter"><span class="secno">5.1.2</span> <span class="content">Single Asynchronous Parameter</span></a>
+       </ol>
       <li><a href="#alternatives-logical-return-types"><span class="secno">5.2</span> <span class="content">Logical Return Types</span></a>
       <li><a href="#passthrough-of-values-from-predecessor"><span class="secno">5.3</span> <span class="content">Passthrough of Values from Predecessor</span></a>
       <li><a href="#alternatives-attach-to-execution-policeis-or-schedulers"><span class="secno">5.4</span> <span class="content">Attach Execution Policies to Schedulers or Vice Versa</span></a>
@@ -2273,8 +2279,8 @@ For completeness, execution policy overloads of <code class="highlight"><c- n>st
   should be added as well.
 A separate paper on the related but orthogonal topic of parallelizing <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>ranges</c-></code> algorithms and range adaptors is forthcoming.</p>
    <h3 class="heading settled" data-level="3.3" id="design-asynchronous-parameters"><span class="secno">3.3. </span><span class="content">Asynchronous Parameters</span><a class="self-link" href="#design-asynchronous-parameters"></a></h3>
-   <p>We need to support two types of dependencies when composing asynchronous
-  algorithms.</p>
+   <p>There are two types of two types of dependencies that we may want to express
+  when composing asynchronous algorithms.</p>
    <ul>
     <li data-md>
      <p>Data dependencies: The output of asynchronous operation <code class="highlight"><c- n>X</c-></code> (a sender) may
@@ -2295,41 +2301,12 @@ It is solely an execution dependency - the algorithm does not use any values it
 The asynchronous parallel algorithm will perform its work on the predecessor
   sender’s scheduler.</p>
    <p>We explored passing inputs to the algorithm through the
-  predecessor sender in <a href="#alternatives-single-asynchronous-parameter">§ 5.1 Single Asynchronous Parameter</a>, but
-  decided against that approach.</p>
-   <p>The rest of the parameters of an asynchronous parallel algorithm correspond to
-  the parameters of the serial algorithm, which we’ll call the algorithmic
-  parameters.
-In serial algorithms, each of these algorithmic parameters is immediately
-  available, meaning they are a non-sender object - a range, an iterator, a
-  scalar, an operation, etc.
-In asynchronous parallel algorithms, each of these algorithmic parameters
-  is either an immediately available object or a sender of the same type of
-  object.</p>
-<pre class="highlight"><c- k>template</c-> <c- o>&lt;</c-><c- k>class</c-> <c- nc>T</c-><c- o>></c->
-<c- k>concept</c-> <c- nc>immediate_or_sender</c-> <c- o>=</c-> <c- n>T</c-> <c- o>||</c-> <c- n>sender_of</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-><c- p>;</c->
-</pre>
-   <p>Asynchronous parallel algorithms perform a <code class="highlight"><c- n>when_all</c-></code> on all of the algorithmic
-  parameters that are senders, and then launch their work on the predecessor
-  sender’s scheduler.</p>
-<pre class="highlight"><c- n>sender_of</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>async</c-><c- o>::</c-><c- n>__reduce</c-><c- p>(</c-><c- n>sender</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>pred</c-><c- p>,</c->
-                             <c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>rng</c-><c- p>,</c->
-                             <c- n>T</c-> <c- n>init</c-><c- p>,</c->
-                             <c- n>Op</c-> <c- n>op</c-><c- p>);</c->
-
-<c- n>sender_of</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>async</c-><c- o>::</c-><c- n>reduce</c-><c- p>(</c-><c- n>sender</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>pred</c-><c- p>,</c->
-                           <c- n>sender_or_immediate</c-><c- o>&lt;</c-><c- n>range</c-><c- o>></c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>rng</c-><c- p>,</c->
-                           <c- n>sender_or_immediate</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>init</c-><c- p>,</c->
-                           <c- n>sender_or_immediate</c-><c- o>&lt;</c-><c- n>Op</c-><c- o>></c-> <c- n>op</c-><c- p>)</c->
-<c- p>{</c->
-  <c- k>return</c-> <c- n>when_all</c-><c- p>(</c-><c- n>__collect_senders</c-><c- p>(</c-><c- n>rng</c-><c- p>,</c-> <c- n>init</c-><c- p>,</c-> <c- n>op</c-><c- p>))</c->
-       <c- o>|</c-> <c- n>let_value</c-><c- p>([]</c-> <c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>rng</c-><c- p>,</c-> <c- n>T</c-> <c- n>init</c-><c- p>,</c-> <c- n>Op</c-> <c- n>op</c-><c- p>)</c-> <c- p>{</c->
-           <c- k>return</c-> <c- n>pred</c-> <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>__reduce</c-><c- p>(</c-><c- n>rng</c-><c- p>,</c-> <c- n>init</c-><c- p>,</c-> <c- n>op</c-><c- p>);</c->
-         <c- p>});</c->
-<c- p>}</c->
-</pre>
-   <p>This gives us a straightforward way to express data dependencies.</p>
-   <p>This design is inspired by <a href="https://hpx-docs.stellar-group.org/branches/master/html/libs/core/async_base/api/dataflow.html">HPX’s dataflow</a> primitive.</p>
+  predecessor sender in <a href="#alternatives-single-asynchronous-parameter">§ 5.1.2 Single Asynchronous Parameter</a>, but
+  decided against that approach.
+We also explored allowing any of the parameters to be senders in <a href="#alternatives-dataflow-asynchronous-parameters">§ 5.1.1 Dataflow Asynchronous Parameters</a>,
+  but we also discarded that approach.</p>
+   <p>We settled on a model where we can only express execution dependencies directly.
+This avoids complexity and covers many of the simple use cases elegantly.</p>
    <h3 class="heading settled" data-level="3.4" id="design-properties-of-execution"><span class="secno">3.4. </span><span class="content">Properties of Execution</span><a class="self-link" href="#design-properties-of-execution"></a></h3>
    <p>Senders and receivers have queryable properties retrievable via <code class="highlight"><c- n>get_env</c-></code>.
 Synchronous scheduled and asynchronous parallel algorithm receive properties
@@ -2369,6 +2346,24 @@ If the sender passed to a synchronous scheduled parallel algorithm has no
   that indicates to <code class="highlight"><c- n>then</c-></code> and similar adaptors that <code class="highlight"><c- n>t</c-><c- p>...</c-></code> should be sent as
   values by the sender returned from the sender adaptor.
 Likewise, <code class="highlight"><c- n>send_error</c-><c- p>(</c-><c- n>e</c-><c- p>)</c-></code> indicates to <code class="highlight"><c- n>then</c-></code> and similar adaptors that <code class="highlight"><c- n>e</c-></code> should be sent as an error by the returned sender.</p>
+   <h3 class="heading settled" data-level="3.6" id="design-into-reduction-algorithms"><span class="secno">3.6. </span><span class="content"><code class="highlight"><c- o>*</c-><c- n>_into</c-></code> Reduction Algorithms</span><a class="self-link" href="#design-into-reduction-algorithms"></a></h3>
+   <p>Many reduction standard algorithms (<code class="highlight"><c- n>reduce</c-></code>, <code class="highlight"><c- n>max_element</c-></code>, etc) return their
+  result from the algorithm.
+Without a way to pass asynchronous dependencies, we found it unwieldy to compose
+  simple patterns involving such algorithms.</p>
+<pre class="highlight"><c- n>iterator</c-> <c- k>auto</c-> <c- n>max_element</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-> <c- n>rng</c-><c- p>,</c-> <c- k>auto</c-> <c- n>comparator</c-><c- p>);</c->
+
+<c- b>void</c-> <c- nf>max_element_into</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-> <c- n>rng</c-><c- p>,</c-> <c- n>T</c-><c- o>&amp;</c-> <c- n>output</c-><c- p>,</c-> <c- k>auto</c-> <c- n>comparator</c-><c- p>);</c->
+</pre>
+   <p>In popular parallel libraries such as <a href="https://nvidia.github.io/cccl/cub/index.html">CUB</a>,
+  reduction algorithms do not return their result, but instead take either a
+  reference or an iterator to a location to write the output.
+In synchronous or fire-or-forget interfaces, this allows you to avoid a memory
+  transfer back to the caller, instead specifying where the result should live.
+This approach can also be used for shape-changing algorithms such as <code class="highlight"><c- n>copy_if</c-></code>.</p>
+   <p>When using this pattern, we found it much easier to express the code we wanted.
+We propose adding such variants of at least the reduction algorithms to ease
+  asynchronous composition.</p>
    <h2 class="heading settled" data-level="4" id="examples"><span class="secno">4. </span><span class="content">Examples</span><a class="self-link" href="#examples"></a></h2>
    <h3 class="heading settled" data-level="4.1" id="examples-basics"><span class="secno">4.1. </span><span class="content">Basics</span><a class="self-link" href="#examples-basics"></a></h3>
 <pre class="highlight"><c- k>auto</c-> <c- n>fgh</c-> <c- o>=</c-> <c- n>just</c-><c- p>()</c-> <c- o>|</c-> <c- n>for_each</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>f</c-><c- p>)</c-> <c- o>|</c-> <c- n>for_each</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>g</c-><c- p>)</c-> <c- o>|</c-> <c- n>for_each</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>h</c-><c- p>);</c->
@@ -2385,31 +2380,24 @@ Likewise, <code class="highlight"><c- n>send_error</c-><c- p>(</c-><c- n>e</c-><
 For example, if we have <code class="highlight"><c- p>{</c-><c- mi>4</c-> <c- mi>2</c-> <c- mi>1</c-> <c- mi>2</c-><c- p>}</c-></code>, the maximum is <code class="highlight"><c- mi>4</c-></code>, and the normalized
   range would be <code class="highlight"><c- p>{</c-><c- mi>1</c-><c- p>,</c-> <c- mi>1</c-><c- o>/</c-><c- mi>2</c-><c- p>,</c-> <c- mi>1</c-><c- o>/</c-><c- mi>4</c-><c- p>,</c-> <c- mi>1</c-><c- o>/</c-><c- mi>2</c-><c- p>}</c-></code>.</p>
 <pre class="highlight"><c- k>auto</c-> <c- n>normalize_serial</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-  <c- k>auto</c-> <c- n>mx</c-> <c- o>=</c-> <c- n>fold_left</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
+  <c- n>T</c-> <c- n>mx</c-><c- p>{};</c->
+  <c- n>max_element_into</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>mx</c-><c- p>);</c->
   <c- k>return</c-> <c- n>transform</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>(</c-><c- n>mx</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>{});</c->
 <c- p>}</c->
 </pre>
 <pre class="highlight"><c- k>auto</c-> <c- n>normalize_parallel</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-  <c- k>auto</c-> <c- n>mx</c-> <c- o>=</c-> <c- n>fold_left</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>v</c-><c- p>,</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
+  <c- n>T</c-> <c- n>mx</c-><c- p>{};</c->
+  <c- n>max_element_into</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>v</c-><c- p>,</c-> <c- n>mx</c-><c- p>);</c->
   <c- k>return</c-> <c- n>transform</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>v</c-><c- p>,</c-> <c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>(</c-><c- n>mx</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>{});</c->
 <c- p>}</c->
 </pre>
-<pre class="highlight"><c- k>auto</c-> <c- n>normalize_async_dataflow</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-  <c- k>auto</c-> <c- n>mx</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>fold_left</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>,</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>{})</c-> <c- o>|</c-> <c- n>split</c-><c- p>;</c->
-  <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>transform</c-><c- p>(</c-><c- n>mx</c-><c- p>,</c-> <c- n>v</c-><c- p>,</c-> <c- n>mx</c-> <c- o>|</c-> <c- n>then</c-><c- p>(</c-><c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>{});</c->
+<pre class="highlight"><c- k>auto</c-> <c- n>normalize_async</c-><c- p>(</c-><c- n>sender</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>pred</c-><c- p>,</c-> <c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
+  <c- k>auto</c-> <c- n>tmp</c-> <c- o>=</c-> <c- n>pred</c-> <c- o>|</c-> <c- n>then</c-><c- p>([]</c-> <c- p>{</c-> <c- k>return</c-> <c- n>T</c-><c- p>{};</c-> <c- p>});</c->
+  <c- k>return</c-> <c- n>let_value</c-><c- p>(</c-><c- n>tmp</c-><c- p>,</c-> <c- p>[]</c-> <c- p>(</c-><c- n>T</c-><c- o>&amp;&amp;</c-> <c- n>mx</c-><c- p>)</c-> <c- p>{</c->
+      <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element_into</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>,</c-> <c- n>mx</c-><c- p>)</c->
+           <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>transform</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>(</c-><c- n>mx</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>{});</c->
+    <c- p>});</c->
 <c- p>}</c->
-</pre>
-<pre class="highlight"><c- k>auto</c-> <c- n>normalize_coroutine</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-  <c- k>auto</c-> <c- n>mx</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>fold_left</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>,</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>{})</c-> <c- o>|</c-> <c- n>split</c-><c- p>;</c->
-  <c- k>co_return</c-> <c- n>async</c-><c- o>::</c-><c- n>transform</c-><c- p>(</c-><c- n>mx</c-><c- p>,</c-> <c- n>v</c-><c- p>,</c-> <c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>(</c-><c- k>co_await</c-> <c- n>mx</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>);</c->
-<c- p>}</c->
-</pre>
-<pre class="highlight"><c- k>auto</c-> <c- n>normalize_async_no_sender_parameters</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-  <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>fold_left</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>{})</c->
-       <c- o>|</c-> <c- n>let_value</c-><c- p>([]</c-> <c- p>(</c-><c- k>auto</c-> <c- n>mx</c-><c- p>,</c-> <c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-           <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>transform</c-><c- p>(</c->
-             <c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>,</c-> <c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>(</c-><c- n>mx</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>{});</c->
-         <c- p>});</c->
 </pre>
    <h3 class="heading settled" data-level="4.3" id="examples-maximum-gap"><span class="secno">4.3. </span><span class="content">Maximum Gap</span><a class="self-link" href="#examples-maximum-gap"></a></h3>
    <p>Find the maximum difference between two successive elements in the sorted form
@@ -2417,35 +2405,31 @@ For example, if we have <code class="highlight"><c- p>{</c-><c- mi>4</c-> <c- mi
 This is a well-known <a href="https://leetcode.com/problems/maximum-gap">LeetCode problem</a>.
 For example, the maximum gap of <code class="highlight"><c- p>{</c-><c- mi>3</c-><c- p>,</c-> <c- mi>6</c-><c- p>,</c-> <c- mi>9</c-><c- p>,</c-> <c- mi>1</c-><c- p>}</c-></code> is <code class="highlight"><c- mi>3</c-></code>.</p>
 <pre class="highlight"><c- k>auto</c-> <c- n>maximum_gap_serial</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-  <c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>tmp</c-><c- p>(</c-><c- n>v</c-><c- p>);</c->
-  <c- n>sort</c-><c- p>(</c-><c- n>tmp</c-><c- p>);</c->
-  <c- n>adjacent_difference</c-><c- p>(</c-><c- n>tmp</c-><c- p>,</c-> <c- n>begin</c-><c- p>(</c-><c- n>tmp</c-><c- p>));</c->
-  <c- k>return</c-> <c- o>*</c-><c- n>max_element</c-><c- p>(</c-><c- n>tmp</c-> <c- o>|</c-> <c- n>drop</c-><c- p>(</c-><c- mi>1</c-><c- p>));</c->
+  <c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>buf</c-><c- p>(</c-><c- n>v</c-><c- p>);</c->
+  <c- n>T</c-> <c- n>mx</c-><c- p>{};</c->
+  <c- n>sort</c-><c- p>(</c-><c- n>buf</c-><c- p>);</c->
+  <c- n>adjacent_difference</c-><c- p>(</c-><c- n>buf</c-><c- p>,</c-> <c- n>begin</c-><c- p>(</c-><c- n>buf</c-><c- p>));</c->
+  <c- n>max_element_into</c-><c- p>(</c-><c- n>buf</c-> <c- o>|</c-> <c- n>drop</c-><c- p>(</c-><c- mi>1</c-><c- p>),</c-> <c- n>mx</c-><c- p>);</c->
+  <c- k>return</c-> <c- n>mx</c-><c- p>;</c->
 <c- p>}</c->
 </pre>
-<pre class="highlight"><c- n>sender</c-> <c- k>auto</c-> <c- n>maximum_gap_async_dataflow</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-  <c- k>auto</c-> <c- n>tmp</c-> <c- o>=</c-> <c- n>just</c-><c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-><c- p>(</c-><c- n>v</c-><c- p>)))</c-> <c- o>|</c-> <c- n>split</c-><c- p>;</c->
-  <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>sort</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>tmp</c-><c- p>);</c->
-       <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>adjacent_difference</c-><c- p>(</c-><c- n>tmp</c-><c- p>,</c-> <c- n>tmp</c-> <c- o>|</c-> <c- n>then</c-><c- p>(</c-><c- n>begin</c-><c- p>));</c->
-       <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element</c-><c- p>(</c-><c- n>tmp</c-> <c- o>|</c-> <c- n>then</c-><c- p>(</c-><c- n>drop</c-><c- p>(</c-><c- mi>1</c-><c- p>)));</c->
-       <c- o>|</c-> <c- n>then</c-><c- p>([]</c-> <c- p>(</c-><c- k>auto</c-> <c- n>it</c-><c- p>)</c-> <c- p>{</c-> <c- k>return</c-> <c- o>*</c-><c- n>it</c-><c- p>;</c-> <c- p>});</c->
+<pre class="highlight"><c- k>auto</c-> <c- n>maximum_gap_parallel</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
+  <c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>buf</c-><c- p>(</c-><c- n>v</c-><c- p>);</c->
+  <c- n>T</c-> <c- n>mx</c-><c- p>{};</c->
+  <c- n>sort</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>buf</c-><c- p>);</c->
+  <c- n>adjacent_difference</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>buf</c-><c- p>,</c-> <c- n>begin</c-><c- p>(</c-><c- n>buf</c-><c- p>));</c->
+  <c- n>max_element_into</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>buf</c-> <c- o>|</c-> <c- n>drop</c-><c- p>(</c-><c- mi>1</c-><c- p>),</c-> <c- n>mx</c-><c- p>);</c->
+  <c- k>return</c-> <c- n>mx</c-><c- p>;</c->
 <c- p>}</c->
 </pre>
-<pre class="highlight"><c- n>sender</c-> <c- k>auto</c-> <c- n>maximum_gap_coroutine</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-  <c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>tmp</c-><c- p>(</c-><c- n>v</c-><c- p>);</c->
-  <c- k>auto</c-> <c- n>s0</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>sort</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>tmp</c-><c- p>);</c->
-  <c- k>auto</c-> <c- n>s1</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>adjacent_difference</c-><c- p>(</c-><c- n>s0</c-><c- p>,</c-> <c- n>tmp</c-><c- p>,</c-> <c- n>begin</c-><c- p>(</c-><c- n>tmp</c-><c- p>));</c->
-  <c- k>co_return</c-> <c- o>*</c-><c- k>co_await</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element</c-><c- p>(</c-><c- n>s1</c-><c- p>,</c-> <c- n>tmp</c-> <c- o>|</c-> <c- n>drop</c-><c- p>(</c-><c- mi>1</c-><c- p>));</c->
-<c- p>}</c->
-</pre>
-<pre class="highlight"><c- n>sender</c-> <c- k>auto</c-> <c- n>maximum_gap_async_no_sender_parameter</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-  <c- k>return</c-> <c- n>just</c-><c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-><c- p>(</c-><c- n>v</c-><c- p>)))</c->
-       <c- o>|</c-> <c- n>let_value</c-><c- p>([]</c-> <c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>tmp</c-><c- p>)</c-> <c- p>{</c->
-           <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>sort</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>tmp</c-><c- p>)</c->
-                <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>adjacent_difference</c-><c- p>(</c-><c- n>tmp</c-><c- p>,</c-> <c- n>begin</c-><c- p>(</c-><c- n>tmp</c-><c- p>))</c->
-                <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element</c-><c- p>(</c-><c- n>tmp</c-> <c- o>|</c-> <c- n>drop</c-><c- p>(</c-><c- mi>1</c-><c- p>))</c->
-                <c- o>|</c-> <c- n>then</c-><c- p>([]</c-> <c- p>(</c-><c- k>auto</c-> <c- n>it</c-><c- p>)</c-> <c- p>{</c-> <c- k>return</c-> <c- o>*</c-><c- n>it</c-><c- p>;</c-> <c- p>});</c->
-         <c- p>});</c->
+<pre class="highlight"><c- n>sender</c-> <c- k>auto</c-> <c- n>maximum_gap_async</c-><c- p>(</c-><c- n>sender</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>pred</c-><c- p>,</c-> <c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
+  <c- k>auto</c-> <c- n>tmp</c-> <c- o>=</c-> <c- n>pred</c-> <c- o>|</c-> <c- n>then</c-><c- p>([</c-><c- o>&amp;</c-><c- p>]</c-> <c- p>{</c-> <c- k>return</c-> <c- n>send_values</c-><c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>T</c-><c- p>{});</c-> <c- p>});</c->
+  <c- k>return</c-> <c- n>let_value</c-><c- p>(</c-><c- n>tmp</c-><c- p>,</c-> <c- p>[]</c-> <c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>>&amp;&amp;</c-> <c- n>buf</c-><c- p>,</c-> <c- n>T</c-><c- o>&amp;&amp;</c-> <c- n>mx</c-><c- p>)</c-> <c- p>{</c->
+      <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>sort</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>tmp</c-><c- p>)</c->
+           <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>adjacent_difference</c-><c- p>(</c-><c- n>buf</c-><c- p>,</c-> <c- n>begin</c-><c- p>(</c-><c- n>buf</c-><c- p>))</c->
+           <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element_into</c-><c- p>(</c-><c- n>buf</c-> <c- o>|</c-> <c- n>drop</c-><c- p>(</c-><c- mi>1</c-><c- p>),</c-> <c- n>mx</c-><c- p>)</c->
+           <c- o>|</c-> <c- n>then</c-><c- p>([]</c-> <c- p>{</c-> <c- k>return</c-> <c- n>mx</c-><c- p>;</c-> <c- p>});</c->
+    <c- p>});</c->
 <c- p>}</c->
 </pre>
    <h3 class="heading settled" data-level="4.4" id="examples-rain-water"><span class="secno">4.4. </span><span class="content">Rain Water</span><a class="self-link" href="#examples-rain-water"></a></h3>
@@ -2454,58 +2438,38 @@ For example, the maximum gap of <code class="highlight"><c- p>{</c-><c- mi>3</c-
 This is a well-known <a href="https://leetcode.com/problems/trapping-rain-water">LeetCode problem</a>.
 For example, if we have <code class="highlight"><c- p>{</c-><c- mi>1</c-><c- p>,</c-> <c- mi>0</c-><c- p>,</c-> <c- mi>2</c-><c- p>,</c-> <c- mi>0</c-><c- p>,</c-> <c- mi>2</c-><c- p>}</c-></code>, then 3 units of water can be trapped.</p>
 <pre class="highlight"><c- b>int</c-> <c- nf>rain_water_serial</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-  <c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>tmp</c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>));</c->
-  <c- k>auto</c-> <c- n>it</c-> <c- o>=</c-> <c- n>max_element</c-><c- p>(</c-><c- n>v</c-><c- p>);</c->
-  <c- n>inclusive_scan</c-><c- p>(</c-><c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c->  <c- n>next</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>tmp</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
-  <c- n>inclusive_scan</c-><c- p>(</c-><c- n>rbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>reverse_iterator</c-><c- p>(</c-><c- n>it</c-><c- p>),</c->  <c- n>rbegin</c-><c- p>(</c-><c- n>tmp</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
-  <c- k>return</c-> <c- n>transform_reduce</c-><c- p>(</c-><c- n>tmp</c-><c- p>,</c-> <c- n>cbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- mi>0</c-><c- p>,</c-> <c- n>plus</c-><c- p>{},</c-> <c- n>minus</c-><c- p>{});</c->
+  <c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>buf</c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>));</c->
+  <c- n>T</c-> <c- n>mx</c-><c- p>{};</c->
+  <c- n>T</c-> <c- n>sum</c-><c- p>{};</c->
+  <c- n>max_element_into</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>mx</c-><c- p>);</c->
+  <c- n>inclusive_scan</c-><c- p>(</c-><c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c->  <c- n>next</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
+  <c- n>inclusive_scan</c-><c- p>(</c-><c- n>rbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>reverse_iterator</c-><c- p>(</c-><c- n>it</c-><c- p>),</c->  <c- n>rbegin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
+  <c- n>transform_reduce_into</c-><c- p>(</c-><c- n>buf</c-><c- p>,</c-> <c- n>cbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>sum</c-><c- p>,</c-> <c- mi>0</c-><c- p>,</c-> <c- n>plus</c-><c- p>{},</c-> <c- n>minus</c-><c- p>{});</c->
+  <c- k>return</c-> <c- n>sum</c-><c- p>;</c->
 <c- p>}</c->
 </pre>
-<pre class="highlight"><c- b>int</c-> <c- nf>rain_water_async_dataflow</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-  <c- k>auto</c-> <c- n>tmp</c-> <c- o>=</c-> <c- n>just</c-><c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>)))</c-> <c- o>|</c-> <c- n>split</c-><c- p>;</c->
-  <c- k>auto</c-> <c- n>it</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>)</c-> <c- o>|</c-> <c- n>split</c-><c- p>;</c->
-  <c- k>auto</c-> <c- n>left</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c-><c- n>it</c-><c- p>,</c->
-    <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>it</c-> <c- o>|</c-> <c- n>then</c-><c- p>(</c-><c- n>next</c-><c- p>),</c-> <c- n>tmp</c-> <c- o>|</c-> <c- n>then</c-><c- p>(</c-><c- n>begin</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
-  <c- k>auto</c-> <c- n>right</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c-><c- n>it</c-><c- p>,</c->
-    <c- n>rbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>it</c-> <c- o>|</c-> <c- n>then</c-><c- p>([]</c-> <c- p>(</c-><c- k>auto</c-> <c- n>i</c-><c- p>)</c-> <c- p>{</c-> <c- k>return</c-> <c- n>reverse_iterator</c-><c- p>(</c-><c- n>i</c-><c- p>)</c-> <c- p>}),</c->
-    <c- n>tmp</c-> <c- o>|</c-> <c- n>then</c-><c- p>(</c-><c- n>rbegin</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
-  <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>transform_reduce</c-><c- p>(</c-><c- n>when_all</c-><c- p>(</c-><c- n>left</c-><c- p>,</c-> <c- n>right</c-><c- p>),</c->
-    <c- n>tmp</c-><c- p>,</c-> <c- n>cbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- mi>0</c-><c- p>,</c-> <c- n>plus</c-><c- p>{},</c-> <c- n>minus</c-><c- p>{});</c->
+<pre class="highlight"><c- b>int</c-> <c- nf>rain_water_parallel</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
+  <c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>buf</c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>));</c->
+  <c- n>T</c-> <c- n>mx</c-><c- p>{};</c->
+  <c- n>T</c-> <c- n>sum</c-><c- p>{};</c->
+  <c- n>max_element_into</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>v</c-><c- p>,</c-> <c- n>mx</c-><c- p>);</c->
+  <c- n>inclusive_scan</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c->  <c- n>next</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
+  <c- n>inclusive_scan</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>rbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>reverse_iterator</c-><c- p>(</c-><c- n>it</c-><c- p>),</c->  <c- n>rbegin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
+  <c- n>transform_reduce_into</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>buf</c-><c- p>,</c-> <c- n>cbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>sum</c-><c- p>,</c-> <c- mi>0</c-><c- p>,</c-> <c- n>plus</c-><c- p>{},</c-> <c- n>minus</c-><c- p>{});</c->
+  <c- k>return</c-> <c- n>sum</c-><c- p>;</c->
 <c- p>}</c->
 </pre>
-<pre class="highlight"><c- n>sender_of</c-><c- o>&lt;</c-><c- b>int</c-><c- o>></c-> <c- k>auto</c-> <c- n>rain_water_coroutine</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-  <c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>tmp</c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- mi>0</c-><c- p>);</c->
-  <c- k>auto</c-> <c- n>it</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>)</c-> <c- o>|</c-> <c- n>split</c-><c- p>;</c->
-  <c- k>auto</c-> <c- n>left</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c->
-    <c- n>it</c-><c- p>,</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c->  <c- n>next</c-><c- p>(</c-><c- k>co_await</c-> <c- n>it</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>tmp</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
-  <c- k>auto</c-> <c- n>right</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c->
-    <c- n>it</c-><c- p>,</c-> <c- n>rbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>reverse_iterator</c-><c- p>(</c-><c- k>co_await</c-> <c- n>it</c-><c- p>),</c-> <c- n>rbegin</c-><c- p>(</c-><c- n>tmp</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
-  <c- k>co_return</c-> <c- n>async</c-><c- o>::</c-><c- n>transform_reduce</c-><c- p>(</c-><c- k>co_await</c-> <c- n>when_all</c-><c- p>(</c-><c- n>left</c-><c- p>,</c-> <c- n>right</c-><c- p>),</c->
-    <c- n>tmp</c-><c- p>,</c-> <c- n>cbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- mi>0</c-><c- p>,</c-> <c- n>plus</c-><c- p>{},</c-> <c- n>minus</c-><c- p>{});</c->
-<c- p>}</c->
-</pre>
-<pre class="highlight"><c- n>sender_of</c-><c- o>&lt;</c-><c- b>int</c-><c- o>></c-> <c- k>auto</c-> <c- n>rain_water_async_no_sender_parameters</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
-  <c- k>return</c-> <c- n>just</c-><c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>))))</c->
-       <c- o>|</c-> <c- n>let_value</c-><c- p>([</c-><c- o>&amp;</c-><c- n>v</c-><c- p>]</c-> <c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>tmp</c-><c- p>)</c-> <c- p>{</c->
-           <c- k>auto</c-> <c- n>it</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>)</c-> <c- o>|</c-> <c- n>split</c-><c- p>;</c->
-
-           <c- k>auto</c-> <c- n>left</c-> <c- o>=</c-> <c- n>it</c->
-                       <c- o>|</c-> <c- n>let_value</c-><c- p>([</c-><c- o>&amp;</c-><c- n>v</c-><c- p>]</c-> <c- p>(</c-><c- k>auto</c-> <c- n>it</c-><c- p>)</c-> <c- p>{</c->
-                           <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c->
-                             <c- n>just</c-><c- p>(),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>next</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>tmp</c-><c- p>),</c->
-                             <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
-                         <c- p>});</c->
-
-           <c- k>auto</c-> <c- n>right</c-> <c- o>=</c-> <c- n>it</c->
-                       <c- o>|</c-> <c- n>let_value</c-><c- p>([</c-><c- o>&amp;</c-><c- n>v</c-><c- p>]</c-> <c- p>(</c-><c- k>auto</c-> <c- n>it</c-><c- p>)</c-> <c- p>{</c->
-                           <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c->
-                             <c- n>just</c-><c- p>(),</c-> <c- n>rbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>reverse_iterator</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>rbegin</c-><c- p>(</c-><c- n>tmp</c-><c- p>),</c->
-                             <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
-                         <c- p>});</c->
-
-           <c- k>return</c-> <c- n>when_all</c-><c- p>(</c-><c- n>sleft</c-><c- p>,</c-> <c- n>right</c-><c- p>)</c->
-                <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>transform_reduce</c-><c- p>(</c-><c- n>tmp</c-><c- p>,</c-> <c- n>cbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- mi>0</c-><c- p>,</c-> <c- n>plus</c-><c- p>{},</c-> <c- n>minus</c-><c- p>{});</c->
-         <c- p>});</c->
+<pre class="highlight"><c- b>int</c-> <c- nf>rain_water_async</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
+  <c- k>auto</c-> <c- n>tmp</c-> <c- o>=</c-> <c- n>pred</c-> <c- o>|</c-> <c- n>then</c-><c- p>([</c-><c- o>&amp;</c-><c- p>]</c-> <c- p>{</c->
+    <c- k>return</c-> <c- n>send_values</c-><c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>)),</c-> <c- n>T</c-><c- p>{},</c-> <c- n>T</c-><c- p>{});</c->
+  <c- p>});</c->
+  <c- k>return</c-> <c- n>let_value</c-><c- p>(</c-><c- n>tmp</c-><c- p>,</c-> <c- p>[]</c-> <c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>>&amp;&amp;</c-> <c- n>buf</c-><c- p>,</c-> <c- n>T</c-><c- o>&amp;&amp;</c-> <c- n>mx</c-><c- p>,</c-> <c- n>T</c-><c- o>&amp;&amp;</c-> <c- n>sum</c-><c- p>)</c-> <c- p>{</c->
+      <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element_into</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>,</c-> <c- n>mx</c-><c- p>)</c->
+           <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c-><c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c->  <c- n>next</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>)</c->
+           <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c-><c- n>rbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>reverse_iterator</c-><c- p>(</c-><c- n>it</c-><c- p>),</c->  <c- n>rbegin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>)</c->
+           <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>transform_reduce_into</c-><c- p>(</c-><c- n>buf</c-><c- p>,</c-> <c- n>cbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>sum</c-><c- p>,</c-> <c- mi>0</c-><c- p>,</c-> <c- n>plus</c-><c- p>{},</c-> <c- n>minus</c-><c- p>{})</c->
+           <c- o>|</c-> <c- n>then</c-><c- p>([]</c-> <c- p>{</c-> <c- k>return</c-> <c- n>sum</c-> <c- p>});</c->
+    <c- p>});</c->
 <c- p>}</c->
 </pre>
    <h3 class="heading settled" data-level="4.5" id="examples-upper-triangular-cholesky-factorization"><span class="secno">4.5. </span><span class="content">Upper Triangular Cholesky Factorization</span><a class="self-link" href="#examples-upper-triangular-cholesky-factorization"></a></h3>
@@ -2529,9 +2493,9 @@ For example, if we have <code class="highlight"><c- p>{</c-><c- mi>1</c-><c- p>,
 <c- p>}</c->
 </pre>
 <pre class="highlight"><c- n>sender_of</c-><c- o>&lt;</c-><c- n>la_vector</c-><c- o>></c-> <c- n>upper_triangular_cholesky_factorization_async</c-><c- p>(</c->
-  <c- n>la_matrix</c-> <c- n>A</c-><c- p>,</c-> <c- n>la_vector</c-> <c- n>b</c-><c- p>,</c-> <c- n>la_vector</c-> <c- n>x</c-><c- p>)</c->
+  <c- n>sender</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>pred</c-><c- p>,</c-> <c- n>la_matrix</c-> <c- n>A</c-><c- p>,</c-> <c- n>la_vector</c-> <c- n>b</c-><c- p>,</c-> <c- n>la_vector</c-> <c- n>x</c-><c- p>)</c->
 <c- p>{</c->
-  <c- k>return</c-> <c- n>just</c-><c- p>(</c-><c- n>x</c-><c- p>)</c->
+  <c- k>return</c-> <c- n>pred</c->
          <c- c1>// Solve U^T c = b, using x to store c</c->
        <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>triangular_matrix_vector_solve</c-><c- p>(</c->
            <c- n>transposed</c-><c- p>(</c-><c- n>A</c-><c- p>),</c-> <c- n>upper_triangle</c-><c- p>,</c-> <c- n>explicit_diagonal</c-><c- p>,</c->
@@ -2546,7 +2510,84 @@ For example, if we have <code class="highlight"><c- p>{</c-><c- mi>1</c-><c- p>,
 <c- p>}</c->
 </pre>
    <h2 class="heading settled" data-level="5" id="alternatives"><span class="secno">5. </span><span class="content">Alternatives</span><a class="self-link" href="#alternatives"></a></h2>
-   <h3 class="heading settled" data-level="5.1" id="alternatives-single-asynchronous-parameter"><span class="secno">5.1. </span><span class="content">Single Asynchronous Parameter</span><a class="self-link" href="#alternatives-single-asynchronous-parameter"></a></h3>
+   <h3 class="heading settled" data-level="5.1" id="alternatives-asynchronous-parameters"><span class="secno">5.1. </span><span class="content">Asynchronous Parameters</span><a class="self-link" href="#alternatives-asynchronous-parameters"></a></h3>
+   <h4 class="heading settled" data-level="5.1.1" id="alternatives-dataflow-asynchronous-parameters"><span class="secno">5.1.1. </span><span class="content">Dataflow Asynchronous Parameters</span><a class="self-link" href="#alternatives-dataflow-asynchronous-parameters"></a></h4>
+   <p>We explored the idea of allowing any parameter of an asynchronous parallel
+  algorithm to be a sender.
+In serial algorithms, each of these parameters is immediately available,
+  meaning they are a non-sender object.
+These parameters are either ranges, iterators, scalars, or operations.</p>
+   <p>In this proposed design, each of these parameters could be either an
+  immediately available object or a sender of the same type of object.
+This design is inspired by <a href="https://hpx-docs.stellar-group.org/branches/master/html/libs/core/async_base/api/dataflow.html">HPX’s dataflow</a> primitive.</p>
+<pre class="highlight"><c- k>template</c-> <c- o>&lt;</c-><c- k>class</c-> <c- nc>T</c-><c- o>></c->
+<c- k>concept</c-> <c- nc>immediate_or_sender</c-> <c- o>=</c-> <c- n>T</c-> <c- o>||</c-> <c- n>sender_of</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-><c- p>;</c->
+</pre>
+   <p>Asynchronous parallel algorithms would perform a <code class="highlight"><c- n>when_all</c-></code> on all of the
+  algorithmic parameters that are senders, and then launch their work on the
+  predecessor sender’s scheduler.</p>
+<pre class="highlight"><c- n>sender_of</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>async</c-><c- o>::</c-><c- n>__reduce</c-><c- p>(</c-><c- n>sender</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>pred</c-><c- p>,</c->
+                             <c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>rng</c-><c- p>,</c->
+                             <c- n>T</c-> <c- n>init</c-><c- p>,</c->
+                             <c- n>Op</c-> <c- n>op</c-><c- p>);</c->
+
+<c- n>sender_of</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>async</c-><c- o>::</c-><c- n>reduce</c-><c- p>(</c-><c- n>sender</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>pred</c-><c- p>,</c->
+                           <c- n>sender_or_immediate</c-><c- o>&lt;</c-><c- n>range</c-><c- o>></c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>rng</c-><c- p>,</c->
+                           <c- n>sender_or_immediate</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>init</c-><c- p>,</c->
+                           <c- n>sender_or_immediate</c-><c- o>&lt;</c-><c- n>Op</c-><c- o>></c-> <c- n>op</c-><c- p>)</c->
+<c- p>{</c->
+  <c- k>return</c-> <c- n>when_all</c-><c- p>(</c-><c- n>__collect_senders</c-><c- p>(</c-><c- n>rng</c-><c- p>,</c-> <c- n>init</c-><c- p>,</c-> <c- n>op</c-><c- p>))</c->
+       <c- o>|</c-> <c- n>let_value</c-><c- p>([]</c-> <c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>rng</c-><c- p>,</c-> <c- n>T</c-> <c- n>init</c-><c- p>,</c-> <c- n>Op</c-> <c- n>op</c-><c- p>)</c-> <c- p>{</c->
+           <c- k>return</c-> <c- n>pred</c-> <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>__reduce</c-><c- p>(</c-><c- n>rng</c-><c- p>,</c-> <c- n>init</c-><c- p>,</c-> <c- n>op</c-><c- p>);</c->
+         <c- p>});</c->
+<c- p>}</c->
+</pre>
+   <p>This gives us a straightforward way to express data dependencies.</p>
+<pre class="highlight"><c- k>auto</c-> <c- n>normalize_async_dataflow</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
+  <c- k>auto</c-> <c- n>mx</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>fold_left</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>,</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>{})</c-> <c- o>|</c-> <c- n>split</c-><c- p>;</c->
+  <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>transform</c-><c- p>(</c-><c- n>mx</c-><c- p>,</c-> <c- n>v</c-><c- p>,</c-> <c- n>mx</c-> <c- o>|</c-> <c- n>then</c-><c- p>(</c-><c- n>views</c-><c- o>::</c-><c- n>repeat</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>divides</c-><c- p>{});</c->
+<c- p>}</c->
+</pre>
+<pre class="highlight"><c- n>sender</c-> <c- k>auto</c-> <c- n>maximum_gap_async_dataflow</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
+  <c- k>auto</c-> <c- n>tmp</c-> <c- o>=</c-> <c- n>just</c-><c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-><c- p>(</c-><c- n>v</c-><c- p>)))</c-> <c- o>|</c-> <c- n>split</c-><c- p>;</c->
+  <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>sort</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>tmp</c-><c- p>);</c->
+       <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>adjacent_difference</c-><c- p>(</c-><c- n>tmp</c-><c- p>,</c-> <c- n>tmp</c-> <c- o>|</c-> <c- n>then</c-><c- p>(</c-><c- n>begin</c-><c- p>));</c->
+       <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element</c-><c- p>(</c-><c- n>tmp</c-> <c- o>|</c-> <c- n>then</c-><c- p>(</c-><c- n>drop</c-><c- p>(</c-><c- mi>1</c-><c- p>)));</c->
+       <c- o>|</c-> <c- n>then</c-><c- p>([]</c-> <c- p>(</c-><c- k>auto</c-> <c- n>it</c-><c- p>)</c-> <c- p>{</c-> <c- k>return</c-> <c- o>*</c-><c- n>it</c-><c- p>;</c-> <c- p>});</c->
+<c- p>}</c->
+</pre>
+<pre class="highlight"><c- b>int</c-> <c- nf>rain_water_async_dataflow</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
+  <c- k>auto</c-> <c- n>tmp</c-> <c- o>=</c-> <c- n>just</c-><c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>)))</c-> <c- o>|</c-> <c- n>split</c-><c- p>;</c->
+  <c- k>auto</c-> <c- n>it</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>)</c-> <c- o>|</c-> <c- n>split</c-><c- p>;</c->
+  <c- k>auto</c-> <c- n>left</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c-><c- n>it</c-><c- p>,</c->
+    <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>it</c-> <c- o>|</c-> <c- n>then</c-><c- p>(</c-><c- n>next</c-><c- p>),</c-> <c- n>tmp</c-> <c- o>|</c-> <c- n>then</c-><c- p>(</c-><c- n>begin</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
+  <c- k>auto</c-> <c- n>right</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c-><c- n>it</c-><c- p>,</c->
+    <c- n>rbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>it</c-> <c- o>|</c-> <c- n>then</c-><c- p>([]</c-> <c- p>(</c-><c- k>auto</c-> <c- n>i</c-><c- p>)</c-> <c- p>{</c-> <c- k>return</c-> <c- n>reverse_iterator</c-><c- p>(</c-><c- n>i</c-><c- p>)</c-> <c- p>}),</c->
+    <c- n>tmp</c-> <c- o>|</c-> <c- n>then</c-><c- p>(</c-><c- n>rbegin</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
+  <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>transform_reduce</c-><c- p>(</c-><c- n>when_all</c-><c- p>(</c-><c- n>left</c-><c- p>,</c-> <c- n>right</c-><c- p>),</c->
+    <c- n>tmp</c-><c- p>,</c-> <c- n>cbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- mi>0</c-><c- p>,</c-> <c- n>plus</c-><c- p>{},</c-> <c- n>minus</c-><c- p>{});</c->
+<c- p>}</c->
+</pre>
+   <p>We did consider omitting the predecessor sender, however then it would become
+  unclear where the algorithm would run, just as it can be for <code class="highlight"><c- n>when_all</c-></code>.
+It would also leave us unable to express execution-only dependencies in a clear
+  fashion.</p>
+   <p>We ran into a few problems with this design.
+In many cases it lead to senders being passed and connected multiple times.
+This might happen when passing a sender to multiple different algorithm calls,
+  because they need to operate on the same entity.
+It could also happen if you need to pass a sender both as the predecessor (to
+  indicate where completion should occur) and as an input to the algorithm.</p>
+   <p>Connecting senders multiple times is problematic in this context.
+It is easy to accidentally copy a sender and duplicate computations that may be
+  expensive.
+In fact, this is often the default behavior if you don’t go out of your way to
+  avoid it.
+Alternatively, you must judiciously use <code class="highlight"><c- n>split</c-></code>, but this introduces dynamic
+  allocation and synchronization.
+Additionally, there seems to be no way to get a non-const lvalue reference to
+  be sent to multiple receivers even with <code class="highlight"><c- n>split</c-></code>.</p>
+   <h4 class="heading settled" data-level="5.1.2" id="alternatives-single-asynchronous-parameter"><span class="secno">5.1.2. </span><span class="content">Single Asynchronous Parameter</span><a class="self-link" href="#alternatives-single-asynchronous-parameter"></a></h4>
    <p>We explored a design where the parameters to the algorithms (ranges, iterators,
   invocables) could be provided asynchronously by the predecessor sender instead
   of being supplied at the time the asynchronous algorithm is invoked.
@@ -2586,9 +2627,9 @@ We often had to use the <code class="highlight"><c- n>also</c-></code> and <code
   invocations - increment an iterator by one, dereference an iterator, turn a
   scalar into a range view, get an iterator from a range, etc.</p>
 <pre class="highlight"><c- k>auto</c-> <c- n>normalize_async</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>rng</c-><c- p>)</c-> <c- p>{</c->
-  <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>fold_left</c-><c- p>(</c-><c- n>rng</c-><c- p>,</c-> <c- n>max</c-><c- p>)</c->
+  <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element</c-><c- p>(</c-><c- n>rng</c-><c- p>)</c->
        <c- o>|</c-> <c- n>then</c-><c- p>([]</c-> <c- p>(</c-><c- k>auto</c-> <c- n>rng</c-><c- p>,</c-> <c- k>auto</c-> <c- n>mx</c-><c- p>)</c-> <c- p>{</c->
-           <c- k>return</c-> <c- n>send_values</c-><c- p>(</c-><c- n>rng</c-><c- p>,</c-> <c- n>repeat</c-><c- p>(</c-><c- n>mx</c-><c- p>));</c->
+           <c- k>return</c-> <c- n>send_values</c-><c- p>(</c-><c- n>rng</c-><c- p>,</c-> <c- n>repeat</c-><c- p>(</c-><c- o>*</c-><c- n>mx</c-><c- p>));</c->
          <c- p>})</c->
        <c- o>|</c-> <c- n>inplace</c-><c- p>(</c-><c- n>async</c-><c- o>::</c-><c- n>transform</c-><c- p>(</c-><c- n>divides</c-><c- p>{}));</c->
 <c- p>}</c->
@@ -2661,8 +2702,8 @@ This is implementable because parallel algorithms require forward iterators.</p>
      <tr>
       <td>
 <pre class="highlight"><c- n>reduce</c-><c- p>(</c-><c- n>Range</c-> <c- n>rng</c-><c- p>,</c->
-        <c- n>T</c-> <c- n>init</c-><c- p>,</c->
-        <c- n>F</c-> <c- n>f</c-><c- p>)</c->
+       <c- n>T</c-> <c- n>init</c-><c- p>,</c->
+       <c- n>F</c-> <c- n>f</c-><c- p>)</c->
 </pre>
       <td> The sum as a T. 
       <td> The sum as a T. 
@@ -2903,7 +2944,11 @@ But it may be a bit of a footgun for asynchronous parallel algorithms, just as
    <h3 class="heading settled" data-level="7.1" id="changelog-r1"><span class="secno">7.1. </span><span class="content">R1</span><a class="self-link" href="#changelog-r1"></a></h3>
    <ul>
     <li data-md>
-     <p>Add HPX-dataflow-inspired asynchronous parameters.</p>
+     <p>Add section exploring HPX-dataflow-inspired asynchronous parameters.</p>
+    <li data-md>
+     <p>Change examples to take a predecessor sender.</p>
+    <li data-md>
+     <p>Switch to <code class="highlight"><c- o>*</c-><c- n>_into</c-></code> variant for reductions.</p>
     <li data-md>
      <p>Change predecessor sender value passthrough to append instead of prepending.</p>
     <li data-md>
