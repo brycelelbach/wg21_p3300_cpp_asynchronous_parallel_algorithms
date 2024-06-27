@@ -320,6 +320,7 @@ For example, the maximum gap of `{3, 6, 9, 1}` is `3`.
 T maximum_gap_serial(range auto&& v) {
   vector<T> buf(v);
   T mx{};
+
   sort(buf);
   adjacent_difference(buf, begin(buf));
   max_element_into(buf | drop(1), mx);
@@ -331,6 +332,7 @@ T maximum_gap_serial(range auto&& v) {
 T maximum_gap_parallel(range auto&& v) {
   vector<T> buf(v);
   T mx{};
+
   sort(par, buf);
   adjacent_difference(par, buf, begin(buf));
   max_element_into(par, buf | drop(1), mx);
@@ -341,6 +343,9 @@ T maximum_gap_parallel(range auto&& v) {
 ```
 sender auto maximum_gap_async(sender auto&& pred, range auto&& v) {
   auto tmp = pred | then([&] { return send_values(vector<T>(v), T{}); });
+  // Asynchronously create temporary storage and then create a scope to access
+  // it with `let_value`. An asynchronous creation API would help here.
+
   return let_value(tmp, [] (vector<T>&& buf, T&& mx) {
       return async::sort(just(), tmp)
            | async::adjacent_difference(buf, begin(buf))
@@ -362,9 +367,11 @@ int rain_water_serial(range auto&& v) {
   vector<int> buf(size(v));
   int mx{};
   int sum{};
+
   max_element_into(v, mx);
   inclusive_scan(begin(v),  next(it), begin(buf), ranges::max);
   inclusive_scan(rbegin(v), reverse_iterator(it),  rbegin(buf), ranges::max);
+
   transform_reduce_into(buf, cbegin(v), sum, 0, plus{}, minus{});
   return sum;
 }
@@ -375,23 +382,35 @@ int rain_water_parallel(range auto&& v) {
   vector<int> buf(size(v));
   int mx{};
   int sum{};
+
   max_element_into(par, v, mx);
+
   inclusive_scan(par, begin(v),  next(it), begin(buf), ranges::max);
   inclusive_scan(par, rbegin(v), reverse_iterator(it),  rbegin(buf), ranges::max);
+
   transform_reduce_into(par, buf, cbegin(v), sum, 0, plus{}, minus{});
   return sum;
 }
 ```
 
 ```
-sender auto rain_water_async(range auto&& v) {
+sender auto rain_water_async(sender auto&& pred, range auto&& v) {
   auto tmp = pred | then([&] {
     return send_values(vector<int>(size(v)), int{}, int{});
   });
+  // Asynchronously create temporary storage and then create a scope to access
+  // it with `let_value`. An asynchronous creation API would help here.
+
   return let_value(tmp, [] (vector<int>&& buf, int&& mx, int&& sum) {
-      return async::max_element_into(just(), v, mx)
-           | async::inclusive_scan(begin(v),  next(it), begin(buf), ranges::max)
-           | async::inclusive_scan(rbegin(v), reverse_iterator(it),  rbegin(buf), ranges::max)
+      auto f = async::max_element_into(just(), v, mx) | split;
+      // Make sure we can connect to this sender twice with `split`.
+
+      auto left  = async::inclusive_scan(f, begin(v), next(it), begin(buf), ranges::max);
+      auto right = async::inclusive_scan(f, rbegin(v), reverse_iterator(it), rbegin(buf), ranges::max);
+
+      return when_all(left, right) | let_value([] { return find; })
+             // Depend on both `left` and `right` and make sure we know what
+             // scheduler to complete on. This could be a new form of `when_all`.
            | async::transform_reduce_into(buf, cbegin(v), sum, 0, plus{}, minus{})
            | then([] { return sum });
     });
@@ -404,20 +423,20 @@ sender auto rain_water_async(range auto&& v) {
 void upper_triangular_cholesky_factorization_parallel(
   la_matrix A, la_vector b, la_vector x)
 {
-  // Solve U^T c = b, using x to store c
   triangular_matrix_vector_solve(
     par,
     transposed(A), upper_triangle, explicit_diagonal,
     b,
     x,
     divides{});
+  // Solve U^T c = b, using x to store c
 
-  // Solve U x = c, overwriting x with result
   triangular_matrix_vector_solve(
     par,
     A, upper_triangle, explicit_diagonal,
     x,
     divides{});
+  // Solve U x = c, overwriting x with result
 }
 ```
 
