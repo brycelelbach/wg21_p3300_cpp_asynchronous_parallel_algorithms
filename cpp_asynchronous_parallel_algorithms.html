@@ -2101,7 +2101,7 @@ dfn > a.self-link::before      { content: "#"; }
   <div class="head">
    <p data-fill-with="logo"></p>
    <h1 class="p-name no-ref" id="title">D3300R1<br>C++ Asynchronous Parallel Algorithms</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Proposal, <time class="dt-updated" datetime="2024-06-26">2024-06-26</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Draft Proposal, <time class="dt-updated" datetime="2024-06-27">2024-06-27</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt class="editor">Author:
@@ -2407,6 +2407,7 @@ For example, the maximum gap of <code class="highlight"><c- p>{</c-><c- mi>3</c-
 <pre class="highlight"><c- n>T</c-> <c- nf>maximum_gap_serial</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
   <c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>buf</c-><c- p>(</c-><c- n>v</c-><c- p>);</c->
   <c- n>T</c-> <c- n>mx</c-><c- p>{};</c->
+
   <c- n>sort</c-><c- p>(</c-><c- n>buf</c-><c- p>);</c->
   <c- n>adjacent_difference</c-><c- p>(</c-><c- n>buf</c-><c- p>,</c-> <c- n>begin</c-><c- p>(</c-><c- n>buf</c-><c- p>));</c->
   <c- n>max_element_into</c-><c- p>(</c-><c- n>buf</c-> <c- o>|</c-> <c- n>drop</c-><c- p>(</c-><c- mi>1</c-><c- p>),</c-> <c- n>mx</c-><c- p>);</c->
@@ -2416,6 +2417,7 @@ For example, the maximum gap of <code class="highlight"><c- p>{</c-><c- mi>3</c-
 <pre class="highlight"><c- n>T</c-> <c- nf>maximum_gap_parallel</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
   <c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>buf</c-><c- p>(</c-><c- n>v</c-><c- p>);</c->
   <c- n>T</c-> <c- n>mx</c-><c- p>{};</c->
+
   <c- n>sort</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>buf</c-><c- p>);</c->
   <c- n>adjacent_difference</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>buf</c-><c- p>,</c-> <c- n>begin</c-><c- p>(</c-><c- n>buf</c-><c- p>));</c->
   <c- n>max_element_into</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>buf</c-> <c- o>|</c-> <c- n>drop</c-><c- p>(</c-><c- mi>1</c-><c- p>),</c-> <c- n>mx</c-><c- p>);</c->
@@ -2424,6 +2426,9 @@ For example, the maximum gap of <code class="highlight"><c- p>{</c-><c- mi>3</c-
 </pre>
 <pre class="highlight"><c- n>sender</c-> <c- k>auto</c-> <c- n>maximum_gap_async</c-><c- p>(</c-><c- n>sender</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>pred</c-><c- p>,</c-> <c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
   <c- k>auto</c-> <c- n>tmp</c-> <c- o>=</c-> <c- n>pred</c-> <c- o>|</c-> <c- n>then</c-><c- p>([</c-><c- o>&amp;</c-><c- p>]</c-> <c- p>{</c-> <c- k>return</c-> <c- n>send_values</c-><c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>T</c-><c- p>{});</c-> <c- p>});</c->
+  <c- c1>// Asynchronously create temporary storage and then create a scope to access</c->
+  <c- c1>// it with `let_value`. An asynchronous creation API would help here.</c->
+
   <c- k>return</c-> <c- n>let_value</c-><c- p>(</c-><c- n>tmp</c-><c- p>,</c-> <c- p>[]</c-> <c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>T</c-><c- o>>&amp;&amp;</c-> <c- n>buf</c-><c- p>,</c-> <c- n>T</c-><c- o>&amp;&amp;</c-> <c- n>mx</c-><c- p>)</c-> <c- p>{</c->
       <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>sort</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>tmp</c-><c- p>)</c->
            <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>adjacent_difference</c-><c- p>(</c-><c- n>buf</c-><c- p>,</c-> <c- n>begin</c-><c- p>(</c-><c- n>buf</c-><c- p>))</c->
@@ -2441,9 +2446,11 @@ For example, if we have <code class="highlight"><c- p>{</c-><c- mi>1</c-><c- p>,
   <c- n>vector</c-><c- o>&lt;</c-><c- b>int</c-><c- o>></c-> <c- n>buf</c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>));</c->
   <c- b>int</c-> <c- n>mx</c-><c- p>{};</c->
   <c- b>int</c-> <c- n>sum</c-><c- p>{};</c->
+
   <c- n>max_element_into</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- n>mx</c-><c- p>);</c->
   <c- n>inclusive_scan</c-><c- p>(</c-><c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c->  <c- n>next</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
   <c- n>inclusive_scan</c-><c- p>(</c-><c- n>rbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>reverse_iterator</c-><c- p>(</c-><c- n>it</c-><c- p>),</c->  <c- n>rbegin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
+
   <c- n>transform_reduce_into</c-><c- p>(</c-><c- n>buf</c-><c- p>,</c-> <c- n>cbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>sum</c-><c- p>,</c-> <c- mi>0</c-><c- p>,</c-> <c- n>plus</c-><c- p>{},</c-> <c- n>minus</c-><c- p>{});</c->
   <c- k>return</c-> <c- n>sum</c-><c- p>;</c->
 <c- p>}</c->
@@ -2452,21 +2459,33 @@ For example, if we have <code class="highlight"><c- p>{</c-><c- mi>1</c-><c- p>,
   <c- n>vector</c-><c- o>&lt;</c-><c- b>int</c-><c- o>></c-> <c- n>buf</c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>));</c->
   <c- b>int</c-> <c- n>mx</c-><c- p>{};</c->
   <c- b>int</c-> <c- n>sum</c-><c- p>{};</c->
+
   <c- n>max_element_into</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>v</c-><c- p>,</c-> <c- n>mx</c-><c- p>);</c->
+
   <c- n>inclusive_scan</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c->  <c- n>next</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
   <c- n>inclusive_scan</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>rbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>reverse_iterator</c-><c- p>(</c-><c- n>it</c-><c- p>),</c->  <c- n>rbegin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
+
   <c- n>transform_reduce_into</c-><c- p>(</c-><c- n>par</c-><c- p>,</c-> <c- n>buf</c-><c- p>,</c-> <c- n>cbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>sum</c-><c- p>,</c-> <c- mi>0</c-><c- p>,</c-> <c- n>plus</c-><c- p>{},</c-> <c- n>minus</c-><c- p>{});</c->
   <c- k>return</c-> <c- n>sum</c-><c- p>;</c->
 <c- p>}</c->
 </pre>
-<pre class="highlight"><c- n>sender</c-> <c- k>auto</c-> <c- n>rain_water_async</c-><c- p>(</c-><c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
+<pre class="highlight"><c- n>sender</c-> <c- k>auto</c-> <c- n>rain_water_async</c-><c- p>(</c-><c- n>sender</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>pred</c-><c- p>,</c-> <c- n>range</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>v</c-><c- p>)</c-> <c- p>{</c->
   <c- k>auto</c-> <c- n>tmp</c-> <c- o>=</c-> <c- n>pred</c-> <c- o>|</c-> <c- n>then</c-><c- p>([</c-><c- o>&amp;</c-><c- p>]</c-> <c- p>{</c->
     <c- k>return</c-> <c- n>send_values</c-><c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- b>int</c-><c- o>></c-><c- p>(</c-><c- n>size</c-><c- p>(</c-><c- n>v</c-><c- p>)),</c-> <c- b>int</c-><c- p>{},</c-> <c- b>int</c-><c- p>{});</c->
   <c- p>});</c->
+  <c- c1>// Asynchronously create temporary storage and then create a scope to access</c->
+  <c- c1>// it with `let_value`. An asynchronous creation API would help here.</c->
+
   <c- k>return</c-> <c- n>let_value</c-><c- p>(</c-><c- n>tmp</c-><c- p>,</c-> <c- p>[]</c-> <c- p>(</c-><c- n>vector</c-><c- o>&lt;</c-><c- b>int</c-><c- o>>&amp;&amp;</c-> <c- n>buf</c-><c- p>,</c-> <c- b>int</c-><c- o>&amp;&amp;</c-> <c- n>mx</c-><c- p>,</c-> <c- b>int</c-><c- o>&amp;&amp;</c-> <c- n>sum</c-><c- p>)</c-> <c- p>{</c->
-      <c- k>return</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element_into</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>,</c-> <c- n>mx</c-><c- p>)</c->
-           <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c-><c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c->  <c- n>next</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>)</c->
-           <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c-><c- n>rbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>reverse_iterator</c-><c- p>(</c-><c- n>it</c-><c- p>),</c->  <c- n>rbegin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>)</c->
+      <c- k>auto</c-> <c- n>f</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>max_element_into</c-><c- p>(</c-><c- n>just</c-><c- p>(),</c-> <c- n>v</c-><c- p>,</c-> <c- n>mx</c-><c- p>)</c-> <c- o>|</c-> <c- n>split</c-><c- p>;</c->
+      <c- c1>// Make sure we can connect to this sender twice with `split`.</c->
+
+      <c- k>auto</c-> <c- n>left</c->  <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c-><c- n>f</c-><c- p>,</c-> <c- n>begin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>next</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>begin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
+      <c- k>auto</c-> <c- n>right</c-> <c- o>=</c-> <c- n>async</c-><c- o>::</c-><c- n>inclusive_scan</c-><c- p>(</c-><c- n>f</c-><c- p>,</c-> <c- n>rbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>reverse_iterator</c-><c- p>(</c-><c- n>it</c-><c- p>),</c-> <c- n>rbegin</c-><c- p>(</c-><c- n>buf</c-><c- p>),</c-> <c- n>ranges</c-><c- o>::</c-><c- n>max</c-><c- p>);</c->
+
+      <c- k>return</c-> <c- n>when_all</c-><c- p>(</c-><c- n>left</c-><c- p>,</c-> <c- n>right</c-><c- p>)</c-> <c- o>|</c-> <c- n>let_value</c-><c- p>([]</c-> <c- p>{</c-> <c- k>return</c-> <c- n>find</c-><c- p>;</c-> <c- p>})</c->
+             <c- c1>// Depend on both `left` and `right` and make sure we know what</c->
+             <c- c1>// scheduler to complete on. This could be a new form of `when_all`.</c->
            <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>transform_reduce_into</c-><c- p>(</c-><c- n>buf</c-><c- p>,</c-> <c- n>cbegin</c-><c- p>(</c-><c- n>v</c-><c- p>),</c-> <c- n>sum</c-><c- p>,</c-> <c- mi>0</c-><c- p>,</c-> <c- n>plus</c-><c- p>{},</c-> <c- n>minus</c-><c- p>{})</c->
            <c- o>|</c-> <c- n>then</c-><c- p>([]</c-> <c- p>{</c-> <c- k>return</c-> <c- n>sum</c-> <c- p>});</c->
     <c- p>});</c->
@@ -2476,20 +2495,20 @@ For example, if we have <code class="highlight"><c- p>{</c-><c- mi>1</c-><c- p>,
 <pre class="highlight"><c- b>void</c-> <c- nf>upper_triangular_cholesky_factorization_parallel</c-><c- p>(</c->
   <c- n>la_matrix</c-> <c- n>A</c-><c- p>,</c-> <c- n>la_vector</c-> <c- n>b</c-><c- p>,</c-> <c- n>la_vector</c-> <c- n>x</c-><c- p>)</c->
 <c- p>{</c->
-  <c- c1>// Solve U^T c = b, using x to store c</c->
   <c- n>triangular_matrix_vector_solve</c-><c- p>(</c->
     <c- n>par</c-><c- p>,</c->
     <c- n>transposed</c-><c- p>(</c-><c- n>A</c-><c- p>),</c-> <c- n>upper_triangle</c-><c- p>,</c-> <c- n>explicit_diagonal</c-><c- p>,</c->
     <c- n>b</c-><c- p>,</c->
     <c- n>x</c-><c- p>,</c->
     <c- n>divides</c-><c- p>{});</c->
+  <c- c1>// Solve U^T c = b, using x to store c</c->
 
-  <c- c1>// Solve U x = c, overwriting x with result</c->
   <c- n>triangular_matrix_vector_solve</c-><c- p>(</c->
     <c- n>par</c-><c- p>,</c->
     <c- n>A</c-><c- p>,</c-> <c- n>upper_triangle</c-><c- p>,</c-> <c- n>explicit_diagonal</c-><c- p>,</c->
     <c- n>x</c-><c- p>,</c->
     <c- n>divides</c-><c- p>{});</c->
+  <c- c1>// Solve U x = c, overwriting x with result</c->
 <c- p>}</c->
 </pre>
 <pre class="highlight"><c- n>sender</c-> <c- k>auto</c-> <c- n>upper_triangular_cholesky_factorization_async</c-><c- p>(</c->
