@@ -2525,17 +2525,17 @@ For example, if we have <code class="highlight"><c- p>{</c-><c- mi>1</c-><c- p>,
   <c- n>sender</c-> <c- k>auto</c-><c- o>&amp;&amp;</c-> <c- n>pred</c-><c- p>,</c-> <c- n>la_matrix</c-> <c- n>A</c-><c- p>,</c-> <c- n>la_vector</c-> <c- n>b</c-><c- p>,</c-> <c- n>la_vector</c-> <c- n>x</c-><c- p>)</c->
 <c- p>{</c->
   <c- k>return</c-> <c- n>pred</c->
-         <c- c1>// Solve U^T c = b, using x to store c</c->
        <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>triangular_matrix_vector_solve</c-><c- p>(</c->
            <c- n>transposed</c-><c- p>(</c-><c- n>A</c-><c- p>),</c-> <c- n>upper_triangle</c-><c- p>,</c-> <c- n>explicit_diagonal</c-><c- p>,</c->
            <c- n>b</c-><c- p>,</c->
            <c- n>x</c-><c- p>,</c->
            <c- n>divides</c-><c- p>{});</c->
-         <c- c1>// Solve U x = c, overwriting x with result</c->
+         <c- c1>// Solve U^T c = b, using x to store c</c->
        <c- o>|</c-> <c- n>async</c-><c- o>::</c-><c- n>triangular_matrix_vector_solve</c-><c- p>(</c->
            <c- n>A</c-><c- p>,</c-> <c- n>upper_triangle</c-><c- p>,</c-> <c- n>explicit_diagonal</c-><c- p>,</c->
            <c- n>x</c-><c- p>,</c->
            <c- n>divides</c-><c- p>{});</c->
+         <c- c1>// Solve U x = c, overwriting x with result</c->
 <c- p>}</c->
 </pre>
    <h2 class="heading settled" data-level="5" id="alternatives"><span class="secno">5. </span><span class="content">Alternatives</span><a class="self-link" href="#alternatives"></a></h2>
