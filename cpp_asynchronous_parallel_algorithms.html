@@ -2206,6 +2206,16 @@ We can add new asynchronous parallel algorithms that can be composed together
   and run on any scheduler.
 We can also add new versions of the synchronous parallel algorithms whose
   execution can be controlled by schedulers.</p>
+   <p>We have two key design requirements for asynchronous parallel algorithms and
+  scheduler-aware synchronous parallel algorithms:</p>
+   <ul>
+    <li data-md>
+     <p>They must deliver reasonable performance across all platforms.</p>
+    <li data-md>
+     <p>Writing asynchronous and parallel code should look like writing non-parallel
+code as much as possible.
+We don’t want a paradigm shift; we want an "easy button" for compute.</p>
+   </ul>
    <h2 class="heading settled" data-level="2" id="terminology"><span class="secno">2. </span><span class="content">Terminology</span><a class="self-link" href="#terminology"></a></h2>
    <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="serial-algorithm"><b>serial algorithm</b></dfn><br> A version of an algorithm that does not take or return an execution policy, sender, or scheduler. E.g. All of the standard algorithms prior to C++17.</p>
    <p><dfn class="dfn-paneled" data-dfn-type="dfn" data-export id="parallel-algorithm"><b>parallel algorithm</b></dfn><br> A version of an algorithm that either returns a sender or takes an execution policy, sender, or scheduler. It does not necessarily execute in parallel.</p>
@@ -2973,6 +2983,8 @@ But it may be a bit of a footgun for asynchronous parallel algorithms, just as
     <li data-md>
      <p>Remove passthrough of values from the predecessor from the proposed design,
 but leave it in the alternatives section.</p>
+    <li data-md>
+     <p>Clearly enumerate design goals.</p>
     <li data-md>
      <p>Change synchronous scheduled algorithms to take schedulers, not senders, as <a data-link-type="biblio" href="https://wg21.link/p2500r2" title="C++ parallel algorithms and P2300">[P2500R2]</a> proposes.</p>
     <li data-md>
