@@ -452,17 +452,17 @@ sender auto upper_triangular_cholesky_factorization_async(
   sender auto&& pred, la_matrix A, la_vector b, la_vector x)
 {
   return pred
-         // Solve U^T c = b, using x to store c
        | async::triangular_matrix_vector_solve(
            transposed(A), upper_triangle, explicit_diagonal,
            b,
            x,
            divides{});
-         // Solve U x = c, overwriting x with result
+         // Solve U^T c = b, using x to store c
        | async::triangular_matrix_vector_solve(
            A, upper_triangle, explicit_diagonal,
            x,
            divides{});
+         // Solve U x = c, overwriting x with result
 }
 ```
 
