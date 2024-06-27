@@ -41,6 +41,13 @@ We can add new asynchronous parallel algorithms that can be composed together
 We can also add new versions of the synchronous parallel algorithms whose
   execution can be controlled by schedulers.
 
+We have two key design requirements for asynchronous parallel algorithms and
+  scheduler-aware synchronous parallel algorithms:
+- They must deliver reasonable performance across all platforms.
+- Writing asynchronous and parallel code should look like writing non-parallel
+    code as much as possible.
+    We don't want a paradigm shift; we want an "easy button" for compute.
+
 # Terminology # {#terminology}
 
 <dfn export=true><b>serial algorithm</b></dfn><br>
@@ -1041,6 +1048,7 @@ table, th, tr, td {
 - Change predecessor sender value passthrough to append instead of prepending.
 - Remove passthrough of values from the predecessor from the proposed design,
     but leave it in the alternatives section.
+- Clearly enumerate design goals.
 - Change synchronous scheduled algorithms to take schedulers, not senders, as
     [[P2500R2]] proposes.
 - Rename the compositional utility `with` to `also`.
